@@ -36,27 +36,21 @@
 - [x] `app/blending.tsx` — OC / CCR 탭 전환, 블렌딩 계산 UI
 - [x] `app/settings.tsx` — ppO₂ / GF / 단위 / 속도 설정 + 저장/초기화
 - [x] AsyncStorage persist 미들웨어 연동 (Zustand)
+- [x] `src/lib/deco/gradient-factor.ts` — GF 보간 + 3m 정지 올림 로직
+- [x] `src/lib/deco/oxygen-toxicity.ts` — CNS%/OTU 계산 (NOAA 표 + Repex 공식)
+- [x] `src/lib/deco/deco-planner.ts` — Bühlmann ZHL-16C + GF 감압 오케스트레이터
+  - 다이브 프로파일 → 조직 포화도 시뮬레이션 (Schreiner 방정식)
+  - GF 보간 기반 ceiling 추적 → 3m 단위 감압 정지 생성
+  - Multi-gas 전환 (bottom mix → deco gas, 전환 수심 기준)
+  - CNS% / OTU 누적 산출
+- [x] `src/components/deco/DecoTable.tsx` — 감압 정지 테이블 (수심/시간/기체/런타임)
+- [x] `src/components/deco/DecoSummary.tsx` — TTS / 총감압시간 / CNS% / OTU 요약 카드
+- [x] `app/deco.tsx` — 다이브 프로파일 입력, 감압 기체 관리, GF 오버라이드, 결과 표시
+- [x] 단위 테스트 32개 전체 통과
 
 ---
 
 ## 앞으로 할 작업
-
-### Phase 5 — 감압 계획 엔진
-- [ ] `src/lib/deco/gradient-factor.ts` — GF 보간 로직 분리
-- [ ] 감압 계획 계산 오케스트레이터 구현
-  - 다이브 프로파일 → 조직 포화도 시뮬레이션
-  - GF 기반 ceiling 추적 → 감압 정지 생성
-  - Multi-gas 전환 (bottom mix → deco gas)
-  - CNS% / OTU 산출
-- [ ] 감압 엔진 단위 테스트 추가
-
-### Phase 6 — 감압 계획 화면 UI
-- [ ] `app/deco.tsx` — 다이브 프로파일 입력 화면
-  - 목표 수심 / 바닥 시간 / 하강 속도
-  - 사용 기체 목록 (bottom + deco gases)
-  - GF 설정 오버라이드
-- [ ] `src/components/deco/DecoTable.tsx` — 감압 정지 테이블 (수심 / 시간 / 기체)
-- [ ] TTS / 총 감압 시간 / CNS% / OTU 요약 카드
 
 ### Phase 7 — 마감 작업
 - [ ] 다크 모드 지원
