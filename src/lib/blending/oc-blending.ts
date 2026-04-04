@@ -1,5 +1,6 @@
 import { GasMix } from '../../types/gas.types';
 import { OCBlendInput, OCBlendResult } from '../../types/blending.types';
+import { AIR_O2 as AIR_O2_DEFAULT } from '../gas/constants';
 
 /**
  * OC 부분압 블렌딩 계산 (Top-up 방식)
@@ -8,7 +9,8 @@ import { OCBlendInput, OCBlendResult } from '../../types/blending.types';
  * 각 단계에서 누적 압력을 계산하여 최종 혼합비 달성.
  */
 export function calcOCBlend(input: OCBlendInput): OCBlendResult {
-  const { currentPressure, currentMix, targetPressure, targetMix } = input;
+  const { currentPressure, currentMix, targetPressure, targetMix, airO2: _airO2 } = input;
+  const AIR_O2 = _airO2 ?? AIR_O2_DEFAULT;
   const warnings: string[] = [];
 
   if (targetPressure <= currentPressure) {
@@ -26,8 +28,8 @@ export function calcOCBlend(input: OCBlendInput): OCBlendResult {
   // 공식: addO2 = (fO2_target * P_final - fO2_current * P_current - AIR_O2 * (P_final - P_current - addHe)) / (1 - AIR_O2)
   const airTopBase = targetPressure - currentPressure - addHePressure;
   const neededExtraO2 =
-    targetMix.fO2 * targetPressure - currentO2 - 0.209 * airTopBase;
-  const addO2Pressure = Math.max(0, neededExtraO2 / (1 - 0.209));
+    targetMix.fO2 * targetPressure - currentO2 - AIR_O2 * airTopBase;
+  const addO2Pressure = Math.max(0, neededExtraO2 / (1 - AIR_O2));
 
   // 나머지는 Air로 채움
   const addTopPressure = targetPressure - currentPressure - addHePressure - addO2Pressure;
@@ -39,7 +41,7 @@ export function calcOCBlend(input: OCBlendInput): OCBlendResult {
   }
 
   // 최종 혼합비 검증
-  const totalO2 = currentO2 + addO2Pressure + 0.209 * Math.max(0, addTopPressure);
+  const totalO2 = currentO2 + addO2Pressure + AIR_O2 * Math.max(0, addTopPressure);
   const totalHe = currentHe + addHePressure;
   const resultFO2 = totalO2 / targetPressure;
   const resultFHe = totalHe / targetPressure;

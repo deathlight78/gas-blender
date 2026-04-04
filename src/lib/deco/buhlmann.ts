@@ -27,8 +27,8 @@ export interface CompartmentState {
 }
 
 /** 초기 조직 상태 (해수면 공기 호흡 기준) */
-export function initialCompartmentState(): CompartmentState {
-  const pN2Surface = alveolarPartialPressure(0.79, SURFACE_PRESSURE);
+export function initialCompartmentState(airN2 = 0.79): CompartmentState {
+  const pN2Surface = alveolarPartialPressure(airN2, SURFACE_PRESSURE);
   return {
     pN2: Array(NUM_COMPARTMENTS).fill(pN2Surface),
     pHe: Array(NUM_COMPARTMENTS).fill(0),

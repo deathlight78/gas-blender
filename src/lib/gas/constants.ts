@@ -8,11 +8,28 @@ export const SURFACE_PRESSURE = 1.0;
 /** 해수 10m당 압력 (bar) */
 export const PRESSURE_PER_10M = 1.0;
 
-/** 공기 O₂ 비율 */
-export const AIR_O2 = 0.209;
+/** 공기 O₂ 비율 — 정밀값 (20.946% 반올림) */
+export const AIR_O2_PRECISE = 0.209;
+/** 공기 O₂ 비율 — 근사값 (다이빙 현장 관행) */
+export const AIR_O2_APPROX  = 0.21;
+/** 기본값 (하위 호환) */
+export const AIR_O2 = AIR_O2_PRECISE;
 
-/** 공기 N₂ 비율 (다이빙 계산 표준값) */
-export const AIR_N2 = 0.79;
+/** 공기 N₂ 비율 — 정밀값 */
+export const AIR_N2_PRECISE = 0.781;
+/** 공기 N₂ 비율 — 근사값 (다이빙 계산 표준값) */
+export const AIR_N2_APPROX  = 0.79;
+/** 기본값 (하위 호환) */
+export const AIR_N2 = AIR_N2_APPROX;
+
+export type AirCompositionMode = 'precise' | 'approximate';
+
+/** 모드에 따른 공기 조성 반환 */
+export function getAirValues(mode: AirCompositionMode): { airO2: number; airN2: number } {
+  return mode === 'precise'
+    ? { airO2: AIR_O2_PRECISE, airN2: AIR_N2_PRECISE }
+    : { airO2: AIR_O2_APPROX,  airN2: AIR_N2_APPROX  };
+}
 
 /** 기본 ppO₂ 작업 한계 (bar) */
 export const DEFAULT_PPO2_WORK = 1.4;

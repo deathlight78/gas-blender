@@ -1,11 +1,17 @@
+import { useRef, useCallback } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useAppTheme } from '../src/context/ThemeContext';
 import { useTranslation } from '../src/i18n';
 
 export default function HomeScreen() {
+  const scrollRef = useRef<ScrollView>(null);
   const router = useRouter();
   const theme = useAppTheme();
+
+  useFocusEffect(useCallback(() => {
+    scrollRef.current?.scrollTo({ y: 0, animated: false });
+  }, []));
   const { t } = useTranslation();
 
   const FEATURES = [
@@ -17,6 +23,7 @@ export default function HomeScreen() {
 
   return (
     <ScrollView
+      ref={scrollRef}
       style={[styles.container, { backgroundColor: theme.background }]}
       contentContainerStyle={styles.content}
     >

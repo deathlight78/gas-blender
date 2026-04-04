@@ -10,6 +10,8 @@ export interface OCBlendInput {
   targetPressure: number;
   /** 목표 혼합비 */
   targetMix: GasMix;
+  /** 공기 O₂ 비율 (설정값, 기본 0.209) */
+  airO2?: number;
 }
 
 /** OC 블렌딩 결과 — 각 기체 주입 순서와 압력 */

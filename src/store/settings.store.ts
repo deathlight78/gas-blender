@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { DEFAULT_PPO2_DECO, DEFAULT_PPO2_WORK } from '../lib/gas/constants';
+import { DEFAULT_PPO2_DECO, DEFAULT_PPO2_WORK, AirCompositionMode, getAirValues } from '../lib/gas/constants';
 import { DepthUnit, PressureUnit } from '../types/gas.types';
 
 interface SettingsState {
@@ -13,6 +13,11 @@ interface SettingsState {
   gfHigh: number;
   ascentRate: number;   // m/min
   descentRate: number;  // m/min
+  airComposition: AirCompositionMode;
+
+  // 현재 모드에서 실제 사용할 airO2 / airN2 값
+  airO2: number;
+  airN2: number;
 
   setDepthUnit: (unit: DepthUnit) => void;
   setPressureUnit: (unit: PressureUnit) => void;
@@ -21,6 +26,7 @@ interface SettingsState {
   setGf: (low: number, high: number) => void;
   setAscentRate: (v: number) => void;
   setDescentRate: (v: number) => void;
+  setAirComposition: (mode: AirCompositionMode) => void;
   resetToDefaults: () => void;
 }
 
@@ -33,6 +39,8 @@ const DEFAULTS = {
   gfHigh: 0.8,
   ascentRate: 9,
   descentRate: 20,
+  airComposition: 'precise' as AirCompositionMode,
+  ...getAirValues('precise'),
 };
 
 export const useSettingsStore = create<SettingsState>()(
@@ -47,6 +55,7 @@ export const useSettingsStore = create<SettingsState>()(
       setGf: (gfLow, gfHigh) => set({ gfLow, gfHigh }),
       setAscentRate: (ascentRate) => set({ ascentRate }),
       setDescentRate: (descentRate) => set({ descentRate }),
+      setAirComposition: (mode) => set({ airComposition: mode, ...getAirValues(mode) }),
       resetToDefaults: () => set(DEFAULTS),
     }),
     {

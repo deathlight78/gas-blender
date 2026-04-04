@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { useFocusEffect } from 'expo-router';
 import NumericInput from '../src/components/ui/NumericInput';
 import GasSlider from '../src/components/ui/GasSlider';
 import SectionHeader from '../src/components/ui/SectionHeader';
@@ -16,8 +17,13 @@ interface DecoGasRow { id: number; switchDepth: string; fO2: number; fHe: number
 let nextId = 1;
 
 export default function DecoScreen() {
-  const { gfLow, gfHigh, ascentRate, descentRate, depthUnit } = useSettingsStore();
+  const scrollRef = useRef<ScrollView>(null);
+  const { gfLow, gfHigh, ascentRate, descentRate, depthUnit, airO2, airN2 } = useSettingsStore();
   const theme = useAppTheme();
+
+  useFocusEffect(useCallback(() => {
+    scrollRef.current?.scrollTo({ y: 0, animated: false });
+  }, []));
   const { t } = useTranslation();
 
   const [targetDepth, setTargetDepth] = useState('40');
@@ -56,7 +62,7 @@ export default function DecoScreen() {
       decoGases: decoGases
         .map((dg) => ({ switchDepth: toM(dg.switchDepth), mix: { fO2: dg.fO2, fHe: dg.fHe, fN2: Math.max(0, 1 - dg.fO2 - dg.fHe) } }))
         .sort((a, b) => b.switchDepth - a.switchDepth),
-      gfLow: gfLo, gfHigh: gfHi, ascentRate, descentRate,
+      gfLow: gfLo, gfHigh: gfHi, ascentRate, descentRate, airO2, airN2,
     };
 
     try {
@@ -73,7 +79,7 @@ export default function DecoScreen() {
     : `EAN ${(bottomFO2 * 100).toFixed(0)}`;
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: theme.background }]} contentContainerStyle={styles.content}>
+    <ScrollView ref={scrollRef} style={[styles.container, { backgroundColor: theme.background }]} contentContainerStyle={styles.content}>
       <SectionHeader title={t('deco_profile')} />
       <View style={[styles.card, { backgroundColor: theme.surface }]}>
         <View style={styles.row2}>

@@ -22,6 +22,10 @@ export interface DecoInput {
   ascentRate: number;
   /** 하강 속도 (m/min) */
   descentRate: number;
+  /** 공기 O₂ 비율 (설정값, 기본 0.209) */
+  airO2?: number;
+  /** 공기 N₂ 비율 (설정값, 기본 0.79) */
+  airN2?: number;
 }
 
 /** 감압 정지 */

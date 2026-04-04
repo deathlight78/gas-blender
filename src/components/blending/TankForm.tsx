@@ -1,6 +1,6 @@
+import { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import NumericInput from '../ui/NumericInput';
-import GasSlider from '../ui/GasSlider';
+import DrumRollPicker from '../ui/DrumRollPicker';
 import SectionHeader from '../ui/SectionHeader';
 import { useAppTheme } from '../../context/ThemeContext';
 import { PressureUnit } from '../../types/gas.types';
@@ -19,13 +19,18 @@ interface TankFormProps {
   errors?: { pressure?: string };
 }
 
-export default function TankForm({
-  title,
-  values,
-  onChange,
-  pressureUnit,
-  errors = {},
-}: TankFormProps) {
+function buildRange(min: number, max: number, step = 1): number[] {
+  const arr: number[] = [];
+  for (let v = min; v <= max; v = Math.round((v + step) * 1000) / 1000) {
+    arr.push(v);
+  }
+  return arr;
+}
+
+const O2_ITEMS = buildRange(4, 100);
+const HE_ITEMS = buildRange(0, 96);
+
+export default function TankForm({ title, values, onChange, pressureUnit, errors = {} }: TankFormProps) {
   const theme = useAppTheme();
   const fN2 = Math.max(0, 1 - values.fO2 - values.fHe);
   const mixLabel =
@@ -35,38 +40,73 @@ export default function TankForm({
       ? `Nitrox ${(values.fO2 * 100).toFixed(0)}`
       : 'Air';
 
-  function set(patch: Partial<TankValues>) {
-    onChange({ ...values, ...patch });
+  const pressureItems = useMemo(() => {
+    return pressureUnit === 'psi' ? buildRange(0, 4350, 10) : buildRange(0, 300, 1);
+  }, [pressureUnit]);
+
+  const pressureValue = useMemo(() => {
+    const v = parseFloat(values.pressure) || 0;
+    // PSI는 10 단위로 반올림
+    return pressureUnit === 'psi' ? Math.round(v / 10) * 10 : Math.round(v);
+  }, [values.pressure, pressureUnit]);
+
+  const o2Pct = Math.round(values.fO2 * 100);
+  const hePct = Math.round(values.fHe * 100);
+
+  function onPressureChange(v: number) {
+    onChange({ ...values, pressure: String(v) });
+  }
+
+  function onO2Change(v: number) {
+    const newO2 = v / 100;
+    // He가 너무 크면 자동으로 줄임
+    const maxHe = Math.floor((1 - newO2) * 100);
+    const newHe = Math.min(values.fHe, maxHe / 100);
+    onChange({ ...values, fO2: newO2, fHe: newHe });
+  }
+
+  function onHeChange(v: number) {
+    const newHe = v / 100;
+    // O2가 너무 크면 자동으로 줄임
+    const maxO2 = Math.floor((1 - newHe) * 100);
+    const newO2 = Math.max(0.04, Math.min(values.fO2, maxO2 / 100));
+    onChange({ ...values, fO2: newO2, fHe: newHe });
   }
 
   return (
     <View>
-      {!!title && <SectionHeader title={title} />}
+      {!!title && <SectionHeader title={title} compact />}
       <View style={[styles.card, { backgroundColor: theme.surface }]}>
-        <NumericInput
-          label="압력"
-          value={values.pressure}
-          onChangeText={(v) => set({ pressure: v })}
-          unit={pressureUnit}
-          error={errors.pressure}
-        />
-        <GasSlider
-          label="O₂ %"
-          value={values.fO2}
-          onChange={(v) => set({ fO2: v })}
-          min={0.04}
-          max={Math.max(0.04, 1 - values.fHe)}
-          step={0.01}
-        />
-        <GasSlider
-          label="He %"
-          value={values.fHe}
-          onChange={(v) => set({ fHe: v })}
-          min={0}
-          max={Math.max(0, 1 - values.fO2)}
-          step={0.01}
-        />
-        <View style={[styles.row, { borderTopColor: theme.surfaceAlt }]}>
+        <View style={styles.pickerRow}>
+          {/* 압력 컬럼 */}
+          <DrumRollPicker
+            label={pressureUnit.toUpperCase()}
+            items={pressureItems}
+            value={pressureValue}
+            onChange={onPressureChange}
+          />
+          <View style={[styles.divider, { backgroundColor: theme.border }]} />
+
+          {/* O2 % 컬럼 */}
+          <DrumRollPicker
+            label="Oxygen %"
+            items={O2_ITEMS}
+            value={o2Pct}
+            onChange={onO2Change}
+          />
+          <View style={[styles.divider, { backgroundColor: theme.border }]} />
+
+          {/* He % 컬럼 */}
+          <DrumRollPicker
+            label="Helium %"
+            items={HE_ITEMS}
+            value={hePct}
+            onChange={onHeChange}
+          />
+        </View>
+
+        {/* N2 / 믹스 배지 */}
+        <View style={[styles.footer, { borderTopColor: theme.surfaceAlt }]}>
           <View style={styles.n2Box}>
             <Text style={[styles.n2Label, { color: theme.textMuted }]}>N₂</Text>
             <Text style={[styles.n2Value, { color: theme.text }]}>
@@ -77,6 +117,10 @@ export default function TankForm({
             <Text style={[styles.mixBadgeText, { color: theme.accent }]}>{mixLabel}</Text>
           </View>
         </View>
+
+        {errors.pressure && (
+          <Text style={[styles.errorText, { color: theme.errorText }]}>{errors.pressure}</Text>
+        )}
       </View>
     </View>
   );
@@ -85,23 +129,38 @@ export default function TankForm({
 const styles = StyleSheet.create({
   card: {
     borderRadius: 12,
-    padding: 16,
+    paddingTop: 10,
+    paddingHorizontal: 6,
+    paddingBottom: 8,
     shadowColor: '#000',
     shadowOpacity: 0.05,
     shadowRadius: 6,
     elevation: 2,
   },
-  row: {
+  pickerRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    paddingHorizontal: 2,
+  },
+  divider: {
+    width: 1,
+    alignSelf: 'stretch',
+    marginHorizontal: 2,
+    marginTop: 18,
+  },
+  footer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingTop: 10,
+    marginTop: 6,
+    paddingTop: 6,
     borderTopWidth: 1,
-    marginTop: 4,
+    paddingHorizontal: 6,
   },
-  n2Box: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  n2Label: { fontSize: 13 },
-  n2Value: { fontSize: 16, fontWeight: '700' },
-  mixBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
-  mixBadgeText: { fontSize: 12, fontWeight: '600' },
+  n2Box: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  n2Label: { fontSize: 12 },
+  n2Value: { fontSize: 14, fontWeight: '700' },
+  mixBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
+  mixBadgeText: { fontSize: 11, fontWeight: '600' },
+  errorText: { fontSize: 12, marginTop: 6, paddingHorizontal: 8 },
 });

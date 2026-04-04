@@ -4,13 +4,14 @@ import { useAppTheme } from '../../context/ThemeContext';
 interface SectionHeaderProps {
   title: string;
   subtitle?: string;
+  compact?: boolean;
 }
 
-export default function SectionHeader({ title, subtitle }: SectionHeaderProps) {
+export default function SectionHeader({ title, subtitle, compact }: SectionHeaderProps) {
   const theme = useAppTheme();
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, compact && styles.compact]}>
       <View style={[styles.accent, { backgroundColor: theme.accent }]} />
       <View>
         <Text style={[styles.title, { color: theme.primary }]}>{title}</Text>
@@ -27,6 +28,10 @@ const styles = StyleSheet.create({
     gap: 10,
     marginTop: 20,
     marginBottom: 12,
+  },
+  compact: {
+    marginTop: 10,
+    marginBottom: 6,
   },
   accent: { width: 4, height: 22, borderRadius: 2 },
   title: { fontSize: 15, fontWeight: '700' },

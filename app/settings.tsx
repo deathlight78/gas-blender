@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Alert, StyleSheet } from 'react-native';
+import { useFocusEffect } from 'expo-router';
 import NumericInput from '../src/components/ui/NumericInput';
 import GasSlider from '../src/components/ui/GasSlider';
 import SectionHeader from '../src/components/ui/SectionHeader';
@@ -44,8 +45,13 @@ function ToggleGroup<T extends string>({
 }
 
 export default function SettingsScreen() {
+  const scrollRef = useRef<ScrollView>(null);
   const theme = useAppTheme();
   const { t } = useTranslation();
+
+  useFocusEffect(useCallback(() => {
+    scrollRef.current?.scrollTo({ y: 0, animated: false });
+  }, []));
   const store = useSettingsStore();
   const { language, setLanguage, themeOverride, setThemeOverride } = useAppStore();
 
@@ -97,6 +103,7 @@ export default function SettingsScreen() {
 
   return (
     <ScrollView
+      ref={scrollRef}
       style={[styles.container, { backgroundColor: theme.background }]}
       contentContainerStyle={styles.content}
     >
@@ -132,6 +139,16 @@ export default function SettingsScreen() {
           value={store.pressureUnit}
           onChange={store.setPressureUnit}
           labels={{ bar: 'bar', psi: 'psi' }}
+        />
+      </View>
+
+      <SectionHeader title={t('settings_air_composition')} subtitle={t('settings_air_composition_subtitle')} />
+      <View style={[styles.card, { backgroundColor: theme.surface }]}>
+        <ToggleGroup<'precise' | 'approximate'>
+          options={['precise', 'approximate']}
+          value={store.airComposition}
+          onChange={store.setAirComposition}
+          labels={{ precise: t('settings_air_precise'), approximate: t('settings_air_approx') }}
         />
       </View>
 

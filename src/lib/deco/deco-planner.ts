@@ -77,16 +77,16 @@ function simulateAscent(
  * Bühlmann ZHL-16C + GF 감압 계획 메인 함수
  */
 export function planDeco(input: DecoInput): DecoResult {
-  const { segments, decoGases, gfLow, gfHigh, ascentRate } = input;
+  const { segments, decoGases, gfLow, gfHigh, ascentRate, airO2 = 0.209, airN2 = 0.79 } = input;
 
-  let state: CompartmentState = initialCompartmentState();
+  let state: CompartmentState = initialCompartmentState(airN2);
   let cns = 0;
   let otu = 0;
   let runTime = 0;
 
   // 1. 다이브 프로파일 시뮬레이션
   let currentDepth = 0;
-  let bottomGas: GasMix = segments[0]?.gas ?? { fO2: 0.21, fHe: 0, fN2: 0.79 };
+  let bottomGas: GasMix = segments[0]?.gas ?? { fO2: airO2, fHe: 0, fN2: airN2 };
 
   for (const seg of segments) {
     bottomGas = seg.gas;

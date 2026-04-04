@@ -7,8 +7,8 @@ import { AIR_N2, SURFACE_PRESSURE } from './constants';
  * @param fN2 질소 비율
  * @param depthM 실제 수심 (m)
  */
-export function ead(fN2: number, depthM: number): number {
-  return (fN2 / AIR_N2) * (depthM + 10) - 10;
+export function ead(fN2: number, depthM: number, airN2 = AIR_N2): number {
+  return (fN2 / airN2) * (depthM + 10) - 10;
 }
 
 /**

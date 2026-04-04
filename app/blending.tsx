@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { useFocusEffect } from 'expo-router';
 import TankForm from '../src/components/blending/TankForm';
 import BlendResult from '../src/components/blending/BlendResult';
 import SectionHeader from '../src/components/ui/SectionHeader';
@@ -22,8 +23,13 @@ const DEFAULT_TARGET: TankValues = { pressure: '200', fO2: 0.32, fHe: 0 };
 const DEFAULT_CCR: CCRValues = { dilFO2: 0.21, dilFHe: 0.35, setpoint: '1.3', maxDepth: '45' };
 
 export default function BlendingScreen() {
-  const { pressureUnit } = useSettingsStore();
+  const scrollRef = useRef<ScrollView>(null);
+  const { pressureUnit, airO2 } = useSettingsStore();
   const theme = useAppTheme();
+
+  useFocusEffect(useCallback(() => {
+    scrollRef.current?.scrollTo({ y: 0, animated: false });
+  }, []));
   const { t } = useTranslation();
 
   const [tab, setTab] = useState<Tab>('oc');
@@ -48,6 +54,7 @@ export default function BlendingScreen() {
       currentMix: { fO2: current.fO2, fHe: current.fHe, fN2: 1 - current.fO2 - current.fHe },
       targetPressure: tp,
       targetMix: { fO2: target.fO2, fHe: target.fHe, fN2: 1 - target.fO2 - target.fHe },
+      airO2,
     }));
   }
 
@@ -77,7 +84,7 @@ export default function BlendingScreen() {
         ))}
       </View>
 
-      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <ScrollView ref={scrollRef} style={styles.container} contentContainerStyle={styles.content}>
         {tab === 'oc' ? (
           <>
             <TankForm title={t('blend_current_tank')} values={current} onChange={setCurrent} pressureUnit={pressureUnit} />
@@ -140,7 +147,7 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { padding: 16 },
   card: { borderRadius: 12, padding: 16, shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 4, elevation: 1 },
-  calcBtn: { borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 16, marginBottom: 4 },
+  calcBtn: { borderRadius: 12, paddingVertical: 10, alignItems: 'center', marginTop: 8, marginBottom: 2 },
   calcBtnText: { fontSize: 16, fontWeight: '700' },
   warningBox: { borderRadius: 8, padding: 12, gap: 6, marginTop: 4 },
   warningText: { fontSize: 13 },
