@@ -14,7 +14,7 @@
 
 ## 현재 진행 상황
 
-### 완료 (Phase 1)
+### 완료 (Phase 1~4)
 - [x] Expo 프로젝트 초기화 및 Expo Router 설정
 - [x] 5개 탭 네비게이션 구조 (`Home`, `Blending`, `Calculator`, `Deco Plan`, `Settings`)
 - [x] 각 탭 플레이스홀더 화면 생성
@@ -28,34 +28,18 @@
   - `src/lib/deco/buhlmann.ts` — Schreiner 방정식, 조직 포화도 업데이트, GF ceiling 계산
 - [x] 타입 정의: `GasMix`, `Tank`, `OCBlendInput/Result`, `CCRBlendInput/Result`, `DecoInput/Result`
 - [x] Settings store (Zustand): ppO₂ 한계, GF, 단위, 상승/하강 속도
-- [x] 단위 테스트 14개 전체 통과 (`npm test`)
+- [x] 단위 테스트 18개 전체 통과 (`npm test`)
+- [x] 공통 UI 컴포넌트: `NumericInput`, `ResultCard`, `GasSlider`, `SectionHeader`
+- [x] `app/calculator.tsx` — MOD / Best Mix / EAD / END 실시간 계산 화면
+- [x] `src/components/blending/TankForm.tsx`, `BlendResult.tsx`
+- [x] `src/lib/blending/ccr-blending.ts` — CCR Diluent + setpoint 계산
+- [x] `app/blending.tsx` — OC / CCR 탭 전환, 블렌딩 계산 UI
+- [x] `app/settings.tsx` — ppO₂ / GF / 단위 / 속도 설정 + 저장/초기화
+- [x] AsyncStorage persist 미들웨어 연동 (Zustand)
 
 ---
 
 ## 앞으로 할 작업
-
-### Phase 2 — 계산기 화면 UI
-- [ ] `app/calculator.tsx` — MOD / Best Mix / EAD / END 입력 폼 + 결과 카드
-  - 수심 입력 → 실시간 MOD, Best Mix, EAD 출력
-  - fO2 / fHe 슬라이더 연동
-- [ ] `src/components/ui/NumericInput.tsx` — 숫자 입력 공통 컴포넌트
-- [ ] `src/components/ui/ResultCard.tsx` — 계산 결과 표시 카드
-- [ ] `src/components/ui/GasSlider.tsx` — O₂ / He 비율 슬라이더
-
-### Phase 3 — OC 블렌딩 화면 UI
-- [ ] `app/blending.tsx` — OC 탭 / CCR 탭 전환 구조
-- [ ] `src/components/blending/TankForm.tsx` — 현재 탱크 / 목표 탱크 입력 폼
-- [ ] `src/components/blending/BlendResult.tsx` — He 주입량 / O₂ 주입량 / 탑업 압력 표시
-- [ ] `src/lib/blending/ccr-blending.ts` — CCR Diluent + setpoint 계산 구현
-- [ ] CCR 블렌딩 화면 UI
-
-### Phase 4 — 설정 화면 UI
-- [ ] `app/settings.tsx` — 설정 화면 완성
-  - ppO₂ 작업/감압 한계 조정
-  - GF Low / High 슬라이더
-  - 단위 전환 (m/ft, bar/psi)
-  - 상승/하강 속도
-- [ ] AsyncStorage 연동 — 설정 영속성 저장
 
 ### Phase 5 — 감압 계획 엔진
 - [ ] `src/lib/deco/gradient-factor.ts` — GF 보간 로직 분리
