@@ -19,7 +19,7 @@ export const useAppStore = create<AppState>()(
   persist(
     (set) => ({
       language: 'ko',
-      themeOverride: null,
+      themeOverride: 'dark' as ThemeOverride,
       hasSeenDisclaimer: false,
 
       setLanguage: (language) => set({ language }),
