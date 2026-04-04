@@ -1,0 +1,21 @@
+node_modules/
+.expo/
+dist/
+build/
+*.tsbuildinfo
+
+# 로컬 환경
+.env
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+
+# Expo
+android/
+ios/

@@ -1,0 +1,33 @@
+{
+  "name": "gas-blender",
+  "version": "1.0.0",
+  "main": "expo-router/entry",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@react-native-async-storage/async-storage": "^3.0.2",
+    "expo": "~54.0.33",
+    "expo-router": "^55.0.10",
+    "expo-status-bar": "~3.0.9",
+    "react": "19.1.0",
+    "react-hook-form": "^7.72.1",
+    "react-native": "0.81.5",
+    "react-native-safe-area-context": "^5.7.0",
+    "react-native-screens": "^4.24.0",
+    "zod": "^4.3.6",
+    "zustand": "^5.0.12"
+  },
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "@types/react": "~19.1.0",
+    "jest": "^30.3.0",
+    "ts-jest": "^29.4.9",
+    "typescript": "~5.9.2"
+  },
+  "private": true
+}
