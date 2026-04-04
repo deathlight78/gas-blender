@@ -18,6 +18,8 @@ function TabNavigator() {
           tabBarStyle: {
             backgroundColor: theme.tabBar,
             borderTopColor: theme.tabBarBorder,
+            paddingBottom: 'env(safe-area-inset-bottom, 0px)' as any,
+            height: 60,
           },
           headerShown: true,
           headerStyle: { backgroundColor: theme.header },
