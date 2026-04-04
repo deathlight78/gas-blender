@@ -1,12 +1,13 @@
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { useAppTheme } from '../../context/ThemeContext';
 
 interface GasSliderProps {
   label: string;
-  value: number;        // 0~1 분율
+  value: number;
   onChange: (v: number) => void;
-  min?: number;         // 분율 기준
-  max?: number;         // 분율 기준
-  step?: number;        // 분율 기준, 기본 0.01
+  min?: number;
+  max?: number;
+  step?: number;
   disabled?: boolean;
 }
 
@@ -19,6 +20,7 @@ export default function GasSlider({
   step = 0.01,
   disabled = false,
 }: GasSliderProps) {
+  const theme = useAppTheme();
   const pct = Math.round(value * 100);
 
   function clamp(v: number) {
@@ -30,28 +32,28 @@ export default function GasSlider({
     if (!isNaN(parsed)) onChange(clamp(parsed / 100));
   }
 
-  function handleDecrement() {
-    onChange(clamp(value - step));
-  }
-
-  function handleIncrement() {
-    onChange(clamp(value + step));
-  }
-
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>{label}</Text>
+      <Text style={[styles.label, { color: theme.textSecondary }]}>{label}</Text>
       <View style={styles.row}>
         <TouchableOpacity
-          style={[styles.stepBtn, disabled && styles.btnDisabled]}
-          onPress={handleDecrement}
+          style={[styles.stepBtn, { backgroundColor: theme.infoBg }, disabled && styles.btnDisabled]}
+          onPress={() => onChange(clamp(value - step))}
           disabled={disabled}
         >
-          <Text style={styles.stepBtnText}>−</Text>
+          <Text style={[styles.stepBtnText, { color: theme.accent }]}>−</Text>
         </TouchableOpacity>
 
         <TextInput
-          style={[styles.input, disabled && styles.inputDisabled]}
+          style={[
+            styles.input,
+            {
+              backgroundColor: theme.inputBg,
+              borderColor: theme.border,
+              color: theme.text,
+            },
+            disabled && { backgroundColor: theme.inputDisabledBg, color: theme.textMuted },
+          ]}
           value={String(pct)}
           onChangeText={handleTextChange}
           keyboardType="number-pad"
@@ -60,20 +62,20 @@ export default function GasSlider({
         />
 
         <TouchableOpacity
-          style={[styles.stepBtn, disabled && styles.btnDisabled]}
-          onPress={handleIncrement}
+          style={[styles.stepBtn, { backgroundColor: theme.infoBg }, disabled && styles.btnDisabled]}
+          onPress={() => onChange(clamp(value + step))}
           disabled={disabled}
         >
-          <Text style={styles.stepBtnText}>+</Text>
+          <Text style={[styles.stepBtnText, { color: theme.accent }]}>+</Text>
         </TouchableOpacity>
 
-        <Text style={styles.pctLabel}>%</Text>
+        <Text style={[styles.pctLabel, { color: theme.textMuted }]}>%</Text>
       </View>
-      <View style={styles.track}>
+      <View style={[styles.track, { backgroundColor: theme.border }]}>
         <View
           style={[
             styles.fill,
-            { width: `${((value - min) / (max - min)) * 100}%` as any },
+            { backgroundColor: theme.accent, width: `${((value - min) / (max - min)) * 100}%` as any },
           ]}
         />
       </View>
@@ -83,42 +85,21 @@ export default function GasSlider({
 
 const styles = StyleSheet.create({
   container: { marginBottom: 14 },
-  label: { fontSize: 13, fontWeight: '600', color: '#334155', marginBottom: 8 },
+  label: { fontSize: 13, fontWeight: '600', marginBottom: 8 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  stepBtn: {
-    width: 36,
-    height: 36,
-    backgroundColor: '#EFF6FF',
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  stepBtn: { width: 36, height: 36, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
   btnDisabled: { opacity: 0.4 },
-  stepBtnText: { fontSize: 20, color: '#0077CC', lineHeight: 24 },
+  stepBtnText: { fontSize: 20, lineHeight: 24 },
   input: {
     width: 64,
-    backgroundColor: '#fff',
     borderWidth: 1,
-    borderColor: '#CBD5E1',
     borderRadius: 8,
     textAlign: 'center',
     fontSize: 18,
     fontWeight: '600',
-    color: '#1E293B',
     paddingVertical: 6,
   },
-  inputDisabled: { backgroundColor: '#F1F5F9', color: '#94A3B8' },
-  pctLabel: { fontSize: 14, color: '#64748B', fontWeight: '500' },
-  track: {
-    height: 4,
-    backgroundColor: '#E2E8F0',
-    borderRadius: 2,
-    marginTop: 10,
-    overflow: 'hidden',
-  },
-  fill: {
-    height: 4,
-    backgroundColor: '#0077CC',
-    borderRadius: 2,
-  },
+  pctLabel: { fontSize: 14, fontWeight: '500' },
+  track: { height: 4, borderRadius: 2, marginTop: 10, overflow: 'hidden' },
+  fill: { height: 4, borderRadius: 2 },
 });

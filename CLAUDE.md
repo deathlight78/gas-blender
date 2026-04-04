@@ -52,13 +52,19 @@
 
 ## 앞으로 할 작업
 
-### Phase 7 — 마감 작업
-- [ ] 다크 모드 지원
-- [ ] 다국어 (한국어 / 영어)
-- [ ] 면책 조항(Disclaimer) 첫 실행 시 표시
-- [ ] 앱 아이콘 / 스플래시 스크린 디자인
-- [ ] EAS Build 설정 (Expo Application Services)
-- [ ] App Store / Google Play 배포 준비
+### Phase 7 — 마감 작업 (완료)
+- [x] 다크 모드 지원 — `ThemeContext` + `useAppTheme`, 라이트/다크/시스템 전환 (설정 화면)
+- [x] 다국어 (한국어 / 영어) — `src/i18n/` + `useTranslation` hook, 전 화면 적용
+- [x] 면책 조항(Disclaimer) 첫 실행 시 표시 — `DisclaimerModal`, AsyncStorage 영속성
+- [x] 앱 아이콘 / 스플래시 배경색 → `#003366` (브랜드 컬러)
+- [x] EAS Build 설정 (`eas.json` — development/preview/production)
+- [x] App Store / Google Play 배포 준비 (`app.json` — bundleIdentifier, package 설정)
+
+### 잔여 배포 작업 (수동 필요)
+- [ ] EAS 프로젝트 ID 등록: `eas init` 실행 후 `app.json` extra.eas.projectId 입력
+- [ ] Apple Developer 계정 등록: `eas.json` submit.ios 필드 채우기
+- [ ] Google Play Service Account 키 파일 준비
+- [ ] 앱 아이콘 실제 디자인 파일 교체 (`assets/icon.png` 등 1024×1024)
 
 ---
 

@@ -1,0 +1,117 @@
+export const en = {
+  // Tabs
+  tab_home: 'Home',
+  tab_blending: 'Blending',
+  tab_calculator: 'Calculator',
+  tab_deco: 'Deco Plan',
+  tab_settings: 'Settings',
+
+  // Common
+  save: 'Save',
+  reset: 'Reset',
+  calculate: 'Calculate',
+  cancel: 'Cancel',
+  confirm: 'OK',
+  warning: 'Warning',
+  error: 'Error',
+
+  // Home
+  home_title: 'Gas Blender',
+  home_subtitle: 'Technical Diving Calculator',
+  home_disclaimer: '⚠️ For reference only. Always plan dives with a qualified instructor.',
+
+  // Calculator
+  calc_gas_settings: 'Gas Settings',
+  calc_gas_subtitle: 'Enter O₂ and He fractions',
+  calc_mod: 'MOD (Maximum Operating Depth)',
+  calc_mod_work: 'MOD (Working)',
+  calc_mod_deco: 'MOD (Deco)',
+  calc_best_mix: 'Best Mix',
+  calc_best_mix_subtitle: 'Optimal O₂ for target depth',
+  calc_ead: 'EAD (Equivalent Air Depth)',
+  calc_end: 'END (Equivalent Narcotic Depth)',
+  calc_target_depth: 'Target Depth',
+  calc_ead_negative: 'Depth too shallow for EAD calculation',
+  calc_end_none: 'He 0% — END equals actual depth',
+  calc_n2_auto: 'N₂ (auto)',
+
+  // Blending
+  blend_oc: 'OC (Open Circuit)',
+  blend_ccr: 'CCR (Closed Circuit)',
+  blend_current_tank: 'Current Tank',
+  blend_target_mix: 'Target Mix',
+  blend_calc: 'Calculate Blend',
+  blend_result: 'Result',
+  blend_diluent: 'Diluent Gas',
+  blend_diluent_subtitle: 'CCR diluent gas settings',
+  blend_setpoint: 'Setpoint',
+  blend_setpoint_hint: 'Typically 1.0–1.3 bar',
+  blend_max_depth: 'Planned Max Depth',
+  blend_ccr_calc: 'Calculate CCR',
+  blend_max_setpoint_depth: 'Max Setpoint Depth',
+  blend_actual_ppo2: 'ppO₂ at Target Depth',
+  blend_err_target_pressure: 'Target pressure must be greater than current pressure.',
+  blend_err_gas_sum: 'O₂ + He cannot exceed 100%.',
+
+  // Deco Planning
+  deco_profile: 'Dive Profile',
+  deco_target_depth: 'Target Depth',
+  deco_bottom_time: 'Bottom Time',
+  deco_bottom_mix: 'Bottom Mix',
+  deco_deco_gases: 'Deco Gases',
+  deco_deco_gases_subtitle: 'Used below switch depth',
+  deco_switch_depth: 'Switch Depth',
+  deco_add_gas: '+ Add Deco Gas',
+  deco_gf: 'Gradient Factor',
+  deco_gf_subtitle: 'Override Settings default',
+  deco_gf_low: 'GF Low',
+  deco_gf_high: 'GF High',
+  deco_calc: 'Plan Decompression',
+  deco_result: 'Deco Plan Result',
+  deco_table: 'Deco Stop Table',
+  deco_no_deco: 'No Decompression (within NDL)',
+  deco_no_deco_sub: 'Direct ascent is safe.',
+  deco_col_depth: 'Depth',
+  deco_col_stop: 'Stop (min)',
+  deco_col_gas: 'Gas',
+  deco_col_runtime: 'Runtime',
+  deco_tts: 'TTS',
+  deco_tts_sub: 'min (Time to Surface)',
+  deco_total_deco: 'Total Deco',
+  deco_disclaimer: '⚠️ For reference only. Always plan dives with a qualified professional.',
+
+  // Settings
+  settings_ppo2: 'ppO₂ Limits',
+  settings_ppo2_subtitle: 'Oxygen toxicity thresholds',
+  settings_ppo2_work: 'Working Limit',
+  settings_ppo2_work_hint: 'Recommended: 1.4 bar (working dive)',
+  settings_ppo2_deco: 'Deco Limit',
+  settings_ppo2_deco_hint: 'Recommended: 1.6 bar (deco stop)',
+  settings_gf: 'Gradient Factor',
+  settings_gf_subtitle: 'Decompression conservatism',
+  settings_units: 'Units',
+  settings_depth: 'Depth',
+  settings_pressure: 'Pressure',
+  settings_rates: 'Ascent / Descent Rate',
+  settings_ascent: 'Ascent Rate',
+  settings_ascent_hint: 'Recommended: 9 m/min',
+  settings_descent: 'Descent Rate',
+  settings_descent_hint: 'Recommended: 20 m/min',
+  settings_appearance: 'Appearance',
+  settings_language: 'Language',
+  settings_theme: 'Theme',
+  settings_theme_system: 'System',
+  settings_theme_light: 'Light',
+  settings_theme_dark: 'Dark',
+  settings_disclaimer: '⚠️ Calculations are for reference only. Always plan with a qualified instructor.',
+
+  // Disclaimer
+  disclaimer_title: '⚠️ Important Safety Notice',
+  disclaimer_body:
+    'Gas Blender is a reference tool to assist technical diving calculations.\n\n' +
+    '• Do not use this app as the sole basis for dive planning.\n' +
+    '• All dive plans must be reviewed with a qualified instructor or divemaster.\n' +
+    '• Gas blending must be performed by trained professionals only.\n' +
+    '• The developer accepts no liability for any consequences of using this app.',
+  disclaimer_agree: 'I Understand, Continue',
+};

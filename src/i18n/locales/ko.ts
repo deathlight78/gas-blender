@@ -1,0 +1,117 @@
+export const ko = {
+  // 탭
+  tab_home: '홈',
+  tab_blending: '블렌딩',
+  tab_calculator: '계산기',
+  tab_deco: '감압 계획',
+  tab_settings: '설정',
+
+  // 공통
+  save: '저장',
+  reset: '초기화',
+  calculate: '계산',
+  cancel: '취소',
+  confirm: '확인',
+  warning: '경고',
+  error: '오류',
+
+  // 홈
+  home_title: 'Gas Blender',
+  home_subtitle: 'Technical Diving Calculator',
+  home_disclaimer: '⚠️ 계산 결과는 참고용입니다. 실제 다이빙은 자격을 갖춘 강사와 함께 계획하세요.',
+
+  // 계산기
+  calc_gas_settings: '기체 설정',
+  calc_gas_subtitle: 'O₂, He 비율 입력',
+  calc_mod: 'MOD (최대 운용 수심)',
+  calc_mod_work: 'MOD (작업)',
+  calc_mod_deco: 'MOD (감압)',
+  calc_best_mix: 'Best Mix',
+  calc_best_mix_subtitle: '목표 수심 기준 최적 O₂ 비율',
+  calc_ead: 'EAD (등가 공기 수심)',
+  calc_end: 'END (등가 나르코틱 수심)',
+  calc_target_depth: '목표 수심',
+  calc_ead_negative: '수심이 너무 얕아 EAD 계산 불가',
+  calc_end_none: 'He 0% — END = 실제 수심과 동일',
+  calc_n2_auto: 'N₂ (자동)',
+
+  // 블렌딩
+  blend_oc: 'OC (개방회로)',
+  blend_ccr: 'CCR (폐쇄회로)',
+  blend_current_tank: '현재 탱크',
+  blend_target_mix: '목표 혼합기체',
+  blend_calc: '블렌딩 계산',
+  blend_result: '계산 결과',
+  blend_diluent: 'Diluent 기체',
+  blend_diluent_subtitle: 'CCR 희석 기체 설정',
+  blend_setpoint: 'Setpoint 설정',
+  blend_setpoint_hint: '일반적으로 1.0~1.3 bar',
+  blend_max_depth: '계획 최대 수심',
+  blend_ccr_calc: 'CCR 계산',
+  blend_max_setpoint_depth: 'Setpoint 유지 최대 수심',
+  blend_actual_ppo2: '목표 수심 ppO₂',
+  blend_err_target_pressure: '목표 압력은 현재 압력보다 높아야 합니다.',
+  blend_err_gas_sum: 'O₂ + He 합이 100%를 초과할 수 없습니다.',
+
+  // 감압 계획
+  deco_profile: '다이브 프로파일',
+  deco_target_depth: '목표 수심',
+  deco_bottom_time: '바닥 시간',
+  deco_bottom_mix: '바닥 기체 (Bottom Mix)',
+  deco_deco_gases: '감압 기체 (Deco Gases)',
+  deco_deco_gases_subtitle: '전환 수심 이하에서 사용',
+  deco_switch_depth: '전환 수심',
+  deco_add_gas: '+ 감압 기체 추가',
+  deco_gf: 'Gradient Factor',
+  deco_gf_subtitle: 'Settings 화면 기본값 오버라이드',
+  deco_gf_low: 'GF Low',
+  deco_gf_high: 'GF High',
+  deco_calc: '감압 계획 계산',
+  deco_result: '감압 계획 결과',
+  deco_table: '감압 정지 테이블',
+  deco_no_deco: '감압 불필요 (NDL 이내)',
+  deco_no_deco_sub: '직접 상승 가능합니다.',
+  deco_col_depth: '수심',
+  deco_col_stop: '정지(분)',
+  deco_col_gas: '기체',
+  deco_col_runtime: '런타임',
+  deco_tts: 'TTS',
+  deco_tts_sub: '분 (Time to Surface)',
+  deco_total_deco: '총 감압',
+  deco_disclaimer: '⚠️ 계산 결과는 참고용입니다. 실제 다이빙은 자격을 갖춘 전문가와 함께 계획하세요.',
+
+  // 설정
+  settings_ppo2: 'ppO₂ 한계',
+  settings_ppo2_subtitle: '산소 독성 기준 압력',
+  settings_ppo2_work: '작업 한계',
+  settings_ppo2_work_hint: '권장: 1.4 bar (작업 다이빙 중)',
+  settings_ppo2_deco: '감압 한계',
+  settings_ppo2_deco_hint: '권장: 1.6 bar (감압 정지 중)',
+  settings_gf: 'Gradient Factor',
+  settings_gf_subtitle: '감압 보수성 설정',
+  settings_units: '단위',
+  settings_depth: '수심',
+  settings_pressure: '압력',
+  settings_rates: '상승 / 하강 속도',
+  settings_ascent: '상승 속도',
+  settings_ascent_hint: '권장: 9 m/min',
+  settings_descent: '하강 속도',
+  settings_descent_hint: '권장: 20 m/min',
+  settings_appearance: '화면',
+  settings_language: '언어',
+  settings_theme: '테마',
+  settings_theme_system: '시스템',
+  settings_theme_light: '라이트',
+  settings_theme_dark: '다크',
+  settings_disclaimer: '⚠️ 이 앱의 계산 결과는 참고용입니다. 실제 다이빙 계획은 반드시 자격을 갖춘 강사와 함께 수립하세요.',
+
+  // 면책 조항
+  disclaimer_title: '⚠️ 중요 안전 안내',
+  disclaimer_body:
+    'Gas Blender는 테크니컬 다이빙 계산을 보조하는 참고용 도구입니다.\n\n' +
+    '• 이 앱의 계산 결과를 실제 다이빙 계획의 유일한 근거로 사용하지 마세요.\n' +
+    '• 모든 다이빙 계획은 자격을 갖춘 강사 또는 다이브마스터와 함께 검토하세요.\n' +
+    '• 가스 블렌딩은 반드시 훈련받은 전문가가 수행해야 합니다.\n' +
+    '• 개발자는 이 앱 사용으로 인한 결과에 책임을 지지 않습니다.',
+  disclaimer_agree: '동의하고 계속하기',
+};

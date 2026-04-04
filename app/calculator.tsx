@@ -7,17 +7,20 @@ import SectionHeader from '../src/components/ui/SectionHeader';
 import { mod, bestMix } from '../src/lib/gas/mod';
 import { ead, end } from '../src/lib/gas/ead-end';
 import { useSettingsStore } from '../src/store/settings.store';
+import { useAppTheme } from '../src/context/ThemeContext';
+import { useTranslation } from '../src/i18n';
 
 function toMeters(value: number, unit: 'ft' | 'm') {
   return unit === 'ft' ? value * 0.3048 : value;
 }
-
 function fromMeters(value: number, unit: 'ft' | 'm') {
   return unit === 'ft' ? value / 0.3048 : value;
 }
 
 export default function CalculatorScreen() {
   const { ppO2Work, ppO2Deco, depthUnit } = useSettingsStore();
+  const theme = useAppTheme();
+  const { t } = useTranslation();
 
   const [fO2, setFO2] = useState(0.21);
   const [fHe, setFHe] = useState(0);
@@ -26,10 +29,7 @@ export default function CalculatorScreen() {
   const fN2 = Math.max(0, 1 - fO2 - fHe);
   const depthInput = parseFloat(depthStr) || 0;
   const depthM = toMeters(depthInput, depthUnit);
-
-  // fHe 슬라이더의 최대값을 fO2를 뺀 나머지로 제한
-  const maxHe = Math.max(0, 1 - fO2);
-  const maxO2 = Math.max(0, 1 - fHe);
+  const depthLabel = depthUnit === 'ft' ? 'ft' : 'm';
 
   const results = useMemo(() => {
     if (fO2 <= 0) return null;
@@ -42,127 +42,80 @@ export default function CalculatorScreen() {
     };
   }, [fO2, fHe, fN2, depthM, ppO2Work, ppO2Deco]);
 
-  const depthLabel = depthUnit === 'ft' ? 'ft' : 'm';
-
   function displayDepth(m: number) {
     return fromMeters(m, depthUnit).toFixed(1);
   }
 
-  return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <SectionHeader title="기체 설정" subtitle="O₂, He 비율 입력" />
+  const mixLabel =
+    fHe > 0
+      ? `Trimix ${(fO2 * 100).toFixed(0)}/${(fHe * 100).toFixed(0)}`
+      : fO2 !== 0.21
+      ? `Nitrox ${(fO2 * 100).toFixed(0)}`
+      : null;
 
-      <View style={styles.card}>
-        <GasSlider
-          label="O₂ %"
-          value={fO2}
-          onChange={setFO2}
-          min={0.04}
-          max={maxO2}
-          step={0.01}
-        />
-        <GasSlider
-          label="He %"
-          value={fHe}
-          onChange={setFHe}
-          min={0}
-          max={maxHe}
-          step={0.01}
-        />
-        <View style={styles.n2Row}>
-          <Text style={styles.n2Label}>N₂ (자동)</Text>
-          <Text style={styles.n2Value}>{(fN2 * 100).toFixed(0)} %</Text>
+  return (
+    <ScrollView
+      style={[styles.container, { backgroundColor: theme.background }]}
+      contentContainerStyle={styles.content}
+    >
+      <SectionHeader title={t('calc_gas_settings')} subtitle={t('calc_gas_subtitle')} />
+      <View style={[styles.card, { backgroundColor: theme.surface }]}>
+        <GasSlider label="O₂ %" value={fO2} onChange={setFO2} min={0.04} max={Math.max(0.04, 1 - fHe)} step={0.01} />
+        <GasSlider label="He %" value={fHe} onChange={setFHe} min={0} max={Math.max(0, 1 - fO2)} step={0.01} />
+        <View style={[styles.n2Row, { borderTopColor: theme.surfaceAlt }]}>
+          <Text style={[styles.n2Label, { color: theme.textMuted }]}>{t('calc_n2_auto')}</Text>
+          <Text style={[styles.n2Value, { color: theme.text }]}>{(fN2 * 100).toFixed(0)} %</Text>
         </View>
-        {fHe > 0 && (
-          <Text style={styles.mixTag}>
-            Trimix {(fO2 * 100).toFixed(0)}/{(fHe * 100).toFixed(0)}
-          </Text>
-        )}
-        {fHe === 0 && fO2 !== 0.21 && (
-          <Text style={styles.mixTag}>
-            Nitrox {(fO2 * 100).toFixed(0)}
+        {mixLabel && (
+          <Text style={[styles.mixTag, { backgroundColor: theme.infoBg, color: theme.accent }]}>
+            {mixLabel}
           </Text>
         )}
       </View>
 
       <SectionHeader
-        title="MOD (최대 운용 수심)"
-        subtitle={`ppO₂ 작업 ${ppO2Work} / 감압 ${ppO2Deco} bar`}
+        title={t('calc_mod')}
+        subtitle={`ppO₂ ${ppO2Work} / ${ppO2Deco} bar`}
       />
       {results ? (
         <>
-          <ResultCard
-            title="MOD (작업)"
-            value={displayDepth(results.modWork)}
-            unit={depthLabel}
-            subtitle={`ppO₂ ${ppO2Work} bar 기준`}
-            accent="#0077CC"
-          />
-          <ResultCard
-            title="MOD (감압)"
-            value={displayDepth(results.modDeco)}
-            unit={depthLabel}
-            subtitle={`ppO₂ ${ppO2Deco} bar 기준`}
-            accent="#005599"
-          />
+          <ResultCard title={t('calc_mod_work')} value={displayDepth(results.modWork)} unit={depthLabel} subtitle={`ppO₂ ${ppO2Work} bar`} accent={theme.accent} />
+          <ResultCard title={t('calc_mod_deco')} value={displayDepth(results.modDeco)} unit={depthLabel} subtitle={`ppO₂ ${ppO2Deco} bar`} accent={theme.accentSub} />
         </>
       ) : (
-        <Text style={styles.emptyHint}>O₂ 비율을 입력하세요</Text>
+        <Text style={[styles.emptyHint, { color: theme.textMuted }]}>O₂ 비율을 입력하세요</Text>
       )}
 
-      <SectionHeader title="Best Mix" subtitle="목표 수심 기준 최적 O₂ 비율" />
-      <View style={styles.card}>
-        <NumericInput
-          label="목표 수심"
-          value={depthStr}
-          onChangeText={setDepthStr}
-          unit={depthLabel}
-        />
+      <SectionHeader title={t('calc_best_mix')} subtitle={t('calc_best_mix_subtitle')} />
+      <View style={[styles.card, { backgroundColor: theme.surface }]}>
+        <NumericInput label={t('calc_target_depth')} value={depthStr} onChangeText={setDepthStr} unit={depthLabel} />
       </View>
       {results && (
-        <ResultCard
-          title="Best Mix O₂"
-          value={(results.bestMixVal * 100).toFixed(0)}
-          unit="%"
-          subtitle={`${depthStr}${depthLabel} / ppO₂ ${ppO2Work} bar 기준`}
-          accent="#008844"
-        />
+        <ResultCard title={`Best Mix O₂`} value={(results.bestMixVal * 100).toFixed(0)} unit="%" subtitle={`${depthStr}${depthLabel} / ppO₂ ${ppO2Work} bar`} accent="#008844" />
       )}
 
-      <SectionHeader title="EAD (등가 공기 수심)" />
+      <SectionHeader title={t('calc_ead')} />
       {results ? (
         <ResultCard
           title="EAD"
-          value={
-            results.eadVal < 0 ? '-' : displayDepth(results.eadVal)
-          }
+          value={results.eadVal < 0 ? '-' : displayDepth(results.eadVal)}
           unit={results.eadVal < 0 ? '' : depthLabel}
           subtitle={`Nitrox ${(fO2 * 100).toFixed(0)} / ${depthStr}${depthLabel}`}
           accent="#7C3AED"
-          warning={results.eadVal < 0 ? '수심이 너무 얕아 EAD 계산 불가' : undefined}
+          warning={results.eadVal < 0 ? t('calc_ead_negative') : undefined}
         />
-      ) : (
-        <Text style={styles.emptyHint}>기체 설정을 입력하세요</Text>
-      )}
+      ) : <Text style={[styles.emptyHint, { color: theme.textMuted }]}>기체 설정을 입력하세요</Text>}
 
-      <SectionHeader title="END (등가 나르코틱 수심)" />
+      <SectionHeader title={t('calc_end')} />
       {results ? (
         results.endVal !== null ? (
-          <ResultCard
-            title="END"
-            value={displayDepth(results.endVal)}
-            unit={depthLabel}
-            subtitle={`He ${(fHe * 100).toFixed(0)}% / ${depthStr}${depthLabel}`}
-            accent="#CC5500"
-          />
+          <ResultCard title="END" value={displayDepth(results.endVal)} unit={depthLabel} subtitle={`He ${(fHe * 100).toFixed(0)}% / ${depthStr}${depthLabel}`} accent="#CC5500" />
         ) : (
-          <View style={styles.infoBox}>
-            <Text style={styles.infoText}>He 0% — END = 실제 수심과 동일</Text>
+          <View style={[styles.infoBox, { backgroundColor: theme.successBg }]}>
+            <Text style={[styles.infoText, { color: theme.successText }]}>{t('calc_end_none')}</Text>
           </View>
         )
-      ) : (
-        <Text style={styles.emptyHint}>기체 설정을 입력하세요</Text>
-      )}
+      ) : <Text style={[styles.emptyHint, { color: theme.textMuted }]}>기체 설정을 입력하세요</Text>}
 
       <View style={{ height: 40 }} />
     </ScrollView>
@@ -170,46 +123,14 @@ export default function CalculatorScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f7fa' },
+  container: { flex: 1 },
   content: { padding: 16 },
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 4,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    elevation: 2,
-  },
-  n2Row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
-    marginTop: 4,
-  },
-  n2Label: { fontSize: 13, color: '#64748B' },
-  n2Value: { fontSize: 16, fontWeight: '700', color: '#334155' },
-  mixTag: {
-    alignSelf: 'flex-start',
-    marginTop: 8,
-    backgroundColor: '#EFF6FF',
-    color: '#0077CC',
-    fontSize: 12,
-    fontWeight: '600',
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-    borderRadius: 12,
-  },
-  emptyHint: { fontSize: 13, color: '#94A3B8', textAlign: 'center', marginVertical: 8 },
-  infoBox: {
-    backgroundColor: '#F0FDF4',
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 10,
-  },
-  infoText: { fontSize: 13, color: '#166534' },
+  card: { borderRadius: 12, padding: 16, marginBottom: 4, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 6, elevation: 2 },
+  n2Row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 8, borderTopWidth: 1, marginTop: 4 },
+  n2Label: { fontSize: 13 },
+  n2Value: { fontSize: 16, fontWeight: '700' },
+  mixTag: { alignSelf: 'flex-start', marginTop: 8, fontSize: 12, fontWeight: '600', paddingHorizontal: 10, paddingVertical: 3, borderRadius: 12 },
+  emptyHint: { fontSize: 13, textAlign: 'center', marginVertical: 8 },
+  infoBox: { borderRadius: 8, padding: 12, marginBottom: 10 },
+  infoText: { fontSize: 13 },
 });

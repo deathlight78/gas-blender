@@ -1,30 +1,31 @@
 import { View, Text, StyleSheet } from 'react-native';
 import { DecoStop } from '../../types/deco.types';
+import { useAppTheme } from '../../context/ThemeContext';
+import { useTranslation } from '../../i18n';
 
 interface DecoTableProps {
   stops: DecoStop[];
-  /** 각 정지까지 도달하는 누적 상승 시간(분) 포함 런타임 계산용 베이스 시간 */
   bottomRunTime: number;
   ascentRate: number;
 }
 
 export default function DecoTable({ stops, bottomRunTime, ascentRate }: DecoTableProps) {
+  const theme = useAppTheme();
+  const { t } = useTranslation();
+
   if (stops.length === 0) {
     return (
-      <View style={styles.noDecoBox}>
-        <Text style={styles.noDecoTitle}>감압 불필요 (NDL 이내)</Text>
-        <Text style={styles.noDecoSub}>직접 상승 가능합니다.</Text>
+      <View style={[styles.noDecoBox, { backgroundColor: theme.successBg, borderColor: theme.border }]}>
+        <Text style={[styles.noDecoTitle, { color: theme.successText }]}>{t('deco_no_deco')}</Text>
+        <Text style={[styles.noDecoSub, { color: theme.successText }]}>{t('deco_no_deco_sub')}</Text>
       </View>
     );
   }
 
-  // 각 정지 수심의 런타임 계산
   let runTime = bottomRunTime;
-  // 바닥 → 첫 정지까지 상승 시간
-  const firstStop = stops[0];
+  let prevDepth = stops[0].depth;
   const rowData: Array<{ stop: DecoStop; runTime: number }> = [];
 
-  let prevDepth = firstStop.depth; // 첫 정지 도착 시점부터 계산
   for (const stop of stops) {
     const ascentMin = Math.ceil((prevDepth - stop.depth) / ascentRate);
     runTime += ascentMin + stop.time;
@@ -33,13 +34,12 @@ export default function DecoTable({ stops, bottomRunTime, ascentRate }: DecoTabl
   }
 
   return (
-    <View style={styles.card}>
-      {/* 헤더 */}
-      <View style={[styles.row, styles.headerRow]}>
-        <Text style={[styles.cell, styles.depthCell, styles.headerText]}>수심</Text>
-        <Text style={[styles.cell, styles.timeCell, styles.headerText]}>정지(분)</Text>
-        <Text style={[styles.cell, styles.gasCell, styles.headerText]}>기체</Text>
-        <Text style={[styles.cell, styles.rtCell, styles.headerText]}>런타임</Text>
+    <View style={[styles.card, { backgroundColor: theme.surface }]}>
+      <View style={[styles.row, styles.headerRow, { backgroundColor: theme.primary }]}>
+        <Text style={[styles.cell, styles.depthCell, styles.headerText]}>{t('deco_col_depth')}</Text>
+        <Text style={[styles.cell, styles.timeCell, styles.headerText]}>{t('deco_col_stop')}</Text>
+        <Text style={[styles.cell, styles.gasCell, styles.headerText]}>{t('deco_col_gas')}</Text>
+        <Text style={[styles.cell, styles.rtCell, styles.headerText]}>{t('deco_col_runtime')}</Text>
       </View>
 
       {rowData.map(({ stop, runTime: rt }, idx) => {
@@ -52,18 +52,22 @@ export default function DecoTable({ stops, bottomRunTime, ascentRate }: DecoTabl
         return (
           <View
             key={idx}
-            style={[styles.row, isShallow && styles.rowHighlight]}
+            style={[
+              styles.row,
+              { borderBottomColor: theme.border },
+              isShallow && { backgroundColor: theme.infoBg },
+            ]}
           >
-            <Text style={[styles.cell, styles.depthCell, styles.depthText]}>
+            <Text style={[styles.cell, styles.depthCell, { color: theme.primary, fontWeight: '700', fontSize: 15 }]}>
               {stop.depth} m
             </Text>
-            <Text style={[styles.cell, styles.timeCell, styles.timeText]}>
+            <Text style={[styles.cell, styles.timeCell, { color: theme.accent, fontWeight: '700', fontSize: 15, textAlign: 'center' }]}>
               {stop.time}
             </Text>
-            <Text style={[styles.cell, styles.gasCell, styles.gasText]}>
+            <Text style={[styles.cell, styles.gasCell, { color: theme.text, fontSize: 13 }]}>
               {gasMixLabel}
             </Text>
-            <Text style={[styles.cell, styles.rtCell, styles.rtText]}>
+            <Text style={[styles.cell, styles.rtCell, { color: theme.textMuted, fontSize: 13, textAlign: 'right' }]}>
               {rt} min
             </Text>
           </View>
@@ -75,39 +79,17 @@ export default function DecoTable({ stops, bottomRunTime, ascentRate }: DecoTabl
 
 const styles = StyleSheet.create({
   noDecoBox: {
-    backgroundColor: '#F0FDF4',
-    borderRadius: 12,
-    padding: 20,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#BBF7D0',
+    borderRadius: 12, padding: 20, alignItems: 'center', borderWidth: 1,
   },
-  noDecoTitle: { fontSize: 16, fontWeight: '700', color: '#166534' },
-  noDecoSub: { fontSize: 13, color: '#4ADE80', marginTop: 4 },
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    elevation: 2,
-  },
-  row: {
-    flexDirection: 'row',
-    borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
-  },
-  headerRow: { backgroundColor: '#003366' },
-  rowHighlight: { backgroundColor: '#EFF6FF' },
+  noDecoTitle: { fontSize: 16, fontWeight: '700' },
+  noDecoSub: { fontSize: 13, marginTop: 4 },
+  card: { borderRadius: 12, overflow: 'hidden', shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 6, elevation: 2 },
+  row: { flexDirection: 'row', borderBottomWidth: 1 },
+  headerRow: {},
   cell: { paddingVertical: 12, paddingHorizontal: 10 },
   depthCell: { width: 72 },
-  timeCell: { width: 72, alignItems: 'center' },
+  timeCell: { width: 72 },
   gasCell: { flex: 1 },
-  rtCell: { width: 72, alignItems: 'flex-end' },
+  rtCell: { width: 72 },
   headerText: { fontSize: 12, fontWeight: '700', color: '#fff' },
-  depthText: { fontSize: 15, fontWeight: '700', color: '#003366' },
-  timeText: { fontSize: 15, fontWeight: '700', color: '#0077CC', textAlign: 'center' },
-  gasText: { fontSize: 13, color: '#334155' },
-  rtText: { fontSize: 13, color: '#64748B', textAlign: 'right' },
 });

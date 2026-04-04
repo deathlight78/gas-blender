@@ -2,6 +2,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import NumericInput from '../ui/NumericInput';
 import GasSlider from '../ui/GasSlider';
 import SectionHeader from '../ui/SectionHeader';
+import { useAppTheme } from '../../context/ThemeContext';
 import { PressureUnit } from '../../types/gas.types';
 
 interface TankValues {
@@ -15,7 +16,7 @@ interface TankFormProps {
   values: TankValues;
   onChange: (values: TankValues) => void;
   pressureUnit: PressureUnit;
-  errors?: { pressure?: string; fO2?: string; fHe?: string };
+  errors?: { pressure?: string };
 }
 
 export default function TankForm({
@@ -25,9 +26,8 @@ export default function TankForm({
   pressureUnit,
   errors = {},
 }: TankFormProps) {
+  const theme = useAppTheme();
   const fN2 = Math.max(0, 1 - values.fO2 - values.fHe);
-  const isHypoxic = values.fO2 * (pressureUnit === 'psi' ? 14.5038 : 1) < 0.16;
-
   const mixLabel =
     values.fHe > 0
       ? `Trimix ${(values.fO2 * 100).toFixed(0)}/${(values.fHe * 100).toFixed(0)}`
@@ -40,9 +40,9 @@ export default function TankForm({
   }
 
   return (
-    <View style={styles.container}>
-      <SectionHeader title={title} />
-      <View style={styles.card}>
+    <View>
+      {!!title && <SectionHeader title={title} />}
+      <View style={[styles.card, { backgroundColor: theme.surface }]}>
         <NumericInput
           label="압력"
           value={values.pressure}
@@ -50,7 +50,6 @@ export default function TankForm({
           unit={pressureUnit}
           error={errors.pressure}
         />
-
         <GasSlider
           label="O₂ %"
           value={values.fO2}
@@ -67,16 +66,15 @@ export default function TankForm({
           max={Math.max(0, 1 - values.fO2)}
           step={0.01}
         />
-
-        <View style={styles.row}>
+        <View style={[styles.row, { borderTopColor: theme.surfaceAlt }]}>
           <View style={styles.n2Box}>
-            <Text style={styles.n2Label}>N₂</Text>
-            <Text style={styles.n2Value}>{(fN2 * 100).toFixed(0)} %</Text>
-          </View>
-          <View style={[styles.mixBadge, isHypoxic && styles.mixBadgeWarn]}>
-            <Text style={[styles.mixBadgeText, isHypoxic && styles.mixBadgeTextWarn]}>
-              {mixLabel}
+            <Text style={[styles.n2Label, { color: theme.textMuted }]}>N₂</Text>
+            <Text style={[styles.n2Value, { color: theme.text }]}>
+              {(fN2 * 100).toFixed(0)} %
             </Text>
+          </View>
+          <View style={[styles.mixBadge, { backgroundColor: theme.infoBg }]}>
+            <Text style={[styles.mixBadgeText, { color: theme.accent }]}>{mixLabel}</Text>
           </View>
         </View>
       </View>
@@ -85,9 +83,7 @@ export default function TankForm({
 }
 
 const styles = StyleSheet.create({
-  container: {},
   card: {
-    backgroundColor: '#fff',
     borderRadius: 12,
     padding: 16,
     shadowColor: '#000',
@@ -101,19 +97,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: 10,
     borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
     marginTop: 4,
   },
   n2Box: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  n2Label: { fontSize: 13, color: '#64748B' },
-  n2Value: { fontSize: 16, fontWeight: '700', color: '#334155' },
-  mixBadge: {
-    backgroundColor: '#EFF6FF',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  mixBadgeWarn: { backgroundColor: '#FEF2F2' },
-  mixBadgeText: { fontSize: 12, fontWeight: '600', color: '#0077CC' },
-  mixBadgeTextWarn: { color: '#DC2626' },
+  n2Label: { fontSize: 13 },
+  n2Value: { fontSize: 16, fontWeight: '700' },
+  mixBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
+  mixBadgeText: { fontSize: 12, fontWeight: '600' },
 });
