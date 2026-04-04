@@ -3,6 +3,7 @@ export const en = {
   tab_home: 'Home',
   tab_blending: 'Blending',
   tab_calculator: 'Calculator',
+  tab_gas_info: 'Gas Info',
   tab_deco: 'Deco Plan',
   tab_settings: 'Settings',
 

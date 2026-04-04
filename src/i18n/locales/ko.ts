@@ -3,6 +3,7 @@ export const ko = {
   tab_home: '홈',
   tab_blending: '블렌딩',
   tab_calculator: '계산기',
+  tab_gas_info: '기체 분석',
   tab_deco: '감압 계획',
   tab_settings: '설정',
 

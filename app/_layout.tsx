@@ -45,9 +45,9 @@ function TabNavigator() {
         <Tabs.Screen
           name="calculator"
           options={{
-            title: t('tab_calculator'),
+            title: t('tab_gas_info'),
             tabBarIcon: ({ color, size }) => (
-              <Ionicons name="calculator-outline" size={size} color={color} />
+              <Ionicons name="analytics-outline" size={size} color={color} />
             ),
           }}
         />
