@@ -1,7 +1,7 @@
-import { useState, useMemo, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { useFocusEffect } from 'expo-router';
-import DrumRollPicker, { DRUM_PICKER_H } from '../src/components/ui/DrumRollPicker';
+import StepInput from '../src/components/ui/StepInput';
 import GasSlider from '../src/components/ui/GasSlider';
 import SectionHeader from '../src/components/ui/SectionHeader';
 import DecoTable from '../src/components/deco/DecoTable';
@@ -9,7 +9,6 @@ import DecoSummary from '../src/components/deco/DecoSummary';
 import { planDeco } from '../src/lib/deco/deco-planner';
 import { DecoResult, DecoInput } from '../src/types/deco.types';
 import { GasMix } from '../src/types/gas.types';
-import { buildRange } from '../src/lib/utils/ranges';
 import { useSettingsStore } from '../src/store/settings.store';
 import { useAppTheme } from '../src/context/ThemeContext';
 import { useTranslation } from '../src/i18n';
@@ -40,20 +39,13 @@ export default function DecoScreen() {
   const [result, setResult] = useState<DecoResult | null>(null);
   const [bottomRunTime, setBottomRunTime] = useState(0);
 
-  const depthLabel = depthUnit === 'ft' ? 'ft' : 'm';
   function toM(v: number) { return depthUnit === 'ft' ? v * 0.3048 : v; }
 
-  // 범위 배열
-  const targetDepthItems = useMemo(
-    () => depthUnit === 'ft' ? buildRange(16, 330, 3) : buildRange(5, 100, 1),
-    [depthUnit],
-  );
-  const switchDepthItems = useMemo(
-    () => depthUnit === 'ft' ? buildRange(10, 300, 10) : buildRange(3, 90, 3),
-    [depthUnit],
-  );
-  const bottomTimeItems = useMemo(() => buildRange(1, 180, 1), []);
-  const gfItems = useMemo(() => buildRange(10, 100, 5), []);
+  const depthMax = depthUnit === 'ft' ? 330 : 100;
+  const depthStep = depthUnit === 'ft' ? 3 : 1;
+  const depthUnit_label = depthUnit === 'ft' ? 'ft' : 'm';
+  const switchMax = depthUnit === 'ft' ? 300 : 90;
+  const switchStep = depthUnit === 'ft' ? 10 : 3;
 
   function calculate() {
     const depthM = toM(targetDepth);
@@ -94,21 +86,24 @@ export default function DecoScreen() {
     <ScrollView ref={scrollRef} style={[styles.container, { backgroundColor: theme.background }]} contentContainerStyle={styles.content}>
       <SectionHeader title={t('deco_profile')} />
       <View style={[styles.card, { backgroundColor: theme.surface }]}>
-        <View style={styles.pickerRow}>
-          <DrumRollPicker
-            label={t('deco_target_depth')}
-            items={targetDepthItems}
-            value={targetDepth}
-            onChange={setTargetDepth}
-          />
-          <View style={[styles.divider, { backgroundColor: theme.border }]} />
-          <DrumRollPicker
-            label={t('deco_bottom_time')}
-            items={bottomTimeItems}
-            value={bottomTime}
-            onChange={setBottomTime}
-          />
-        </View>
+        <StepInput
+          label={t('deco_target_depth')}
+          value={targetDepth}
+          onChange={setTargetDepth}
+          min={depthUnit === 'ft' ? 16 : 5}
+          max={depthMax}
+          step={depthStep}
+          unit={depthUnit_label}
+        />
+        <StepInput
+          label={t('deco_bottom_time')}
+          value={bottomTime}
+          onChange={setBottomTime}
+          min={1}
+          max={180}
+          step={1}
+          unit="min"
+        />
       </View>
 
       <SectionHeader title={t('deco_bottom_mix')} />
@@ -132,18 +127,23 @@ export default function DecoScreen() {
               <Text style={[styles.removeBtn, { color: theme.textMuted }]}>✕</Text>
             </TouchableOpacity>
           </View>
-          <View style={styles.pickerRow}>
-            <DrumRollPicker
-              label={t('deco_switch_depth')}
-              items={switchDepthItems}
-              value={dg.switchDepth}
-              onChange={(v) => setDecoGases((p) => p.map((g) => g.id === dg.id ? { ...g, switchDepth: v } : g))}
-            />
-            <View style={[styles.divider, { backgroundColor: theme.border }]} />
-            <View style={styles.gasSliderHalf}>
-              <GasSlider label="O₂ %" value={dg.fO2} onChange={(v) => setDecoGases((p) => p.map((g) => g.id === dg.id ? { ...g, fO2: v } : g))} min={0.04} max={1} step={0.01} />
-            </View>
-          </View>
+          <StepInput
+            label={t('deco_switch_depth')}
+            value={dg.switchDepth}
+            onChange={(v) => setDecoGases((p) => p.map((g) => g.id === dg.id ? { ...g, switchDepth: v } : g))}
+            min={depthUnit === 'ft' ? 10 : 3}
+            max={switchMax}
+            step={switchStep}
+            unit={depthUnit_label}
+          />
+          <GasSlider
+            label="O₂ %"
+            value={dg.fO2}
+            onChange={(v) => setDecoGases((p) => p.map((g) => g.id === dg.id ? { ...g, fO2: v } : g))}
+            min={0.04}
+            max={1}
+            step={0.01}
+          />
         </View>
       ))}
       <TouchableOpacity style={[styles.addGasBtn, { borderColor: theme.accent }]} onPress={() => setDecoGases((p) => [...p, { id: nextId++, switchDepth: 9, fO2: 0.36, fHe: 0 }])}>
@@ -152,23 +152,24 @@ export default function DecoScreen() {
 
       <SectionHeader title={t('deco_gf')} subtitle={t('deco_gf_subtitle')} />
       <View style={[styles.card, { backgroundColor: theme.surface }]}>
-        <View style={styles.pickerRow}>
-          <DrumRollPicker
-            label={t('deco_gf_low')}
-            items={gfItems}
-            value={gfLo}
-            onChange={setGfLo}
-            formatValue={(v) => `${v}%`}
-          />
-          <View style={[styles.divider, { backgroundColor: theme.border }]} />
-          <DrumRollPicker
-            label={t('deco_gf_high')}
-            items={gfItems}
-            value={gfHi}
-            onChange={setGfHi}
-            formatValue={(v) => `${v}%`}
-          />
-        </View>
+        <StepInput
+          label={t('deco_gf_low')}
+          value={gfLo}
+          onChange={setGfLo}
+          min={10}
+          max={90}
+          step={5}
+          unit="%"
+        />
+        <StepInput
+          label={t('deco_gf_high')}
+          value={gfHi}
+          onChange={setGfHi}
+          min={20}
+          max={100}
+          step={5}
+          unit="%"
+        />
       </View>
 
       <TouchableOpacity style={[styles.calcBtn, { backgroundColor: theme.buttonPrimary }]} onPress={calculate}>
@@ -212,7 +213,7 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: 12,
     paddingTop: 10,
-    paddingHorizontal: 6,
+    paddingHorizontal: 16,
     paddingBottom: 8,
     marginBottom: 4,
     shadowColor: '#000',
@@ -220,19 +221,6 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 2,
   },
-  pickerRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    paddingHorizontal: 2,
-  },
-  divider: {
-    width: 1,
-    alignSelf: 'stretch',
-    marginHorizontal: 2,
-    marginTop: 18,
-    backgroundColor: 'transparent',
-  },
-  gasSliderHalf: { flex: 1, paddingHorizontal: 8 },
   mixInfo: { flexDirection: 'row', justifyContent: 'space-between', paddingTop: 8, borderTopWidth: 1, marginTop: 4 },
   mixLabel: { fontSize: 13, fontWeight: '600' },
   n2Text: { fontSize: 13 },

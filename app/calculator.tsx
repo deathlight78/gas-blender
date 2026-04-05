@@ -126,72 +126,7 @@ export default function CalculatorScreen() {
       style={[styles.container, { backgroundColor: theme.background }]}
       contentContainerStyle={styles.content}
     >
-      <SectionHeader title={t('calc_gas_settings')} subtitle={t('calc_gas_subtitle')} />
-      <View style={[styles.card, { backgroundColor: theme.surface }]}>
-        <GasSlider label="O₂ %" value={fO2} onChange={setFO2} min={0.04} max={Math.max(0.04, 1 - fHe)} step={0.01} />
-        <GasSlider label="He %" value={fHe} onChange={setFHe} min={0} max={Math.max(0, 1 - fO2)} step={0.01} />
-        <View style={[styles.n2Row, { borderTopColor: theme.surfaceAlt }]}>
-          <Text style={[styles.n2Label, { color: theme.textMuted }]}>{t('calc_n2_auto')}</Text>
-          <Text style={[styles.n2Value, { color: theme.text }]}>{(fN2 * 100).toFixed(0)} %</Text>
-        </View>
-        {mixLabel && (
-          <Text style={[styles.mixTag, { backgroundColor: theme.infoBg, color: theme.accent }]}>
-            {mixLabel}
-          </Text>
-        )}
-      </View>
-
-      <SectionHeader
-        title={t('calc_mod')}
-        subtitle={`ppO₂ ${ppO2Work} / ${ppO2Deco} bar`}
-      />
-      {results ? (
-        <>
-          <ResultCard title={t('calc_mod_work')} value={displayDepth(results.modWork)} unit={depthLabel} subtitle={`ppO₂ ${ppO2Work} bar`} accent={theme.accent} />
-          <ResultCard title={t('calc_mod_deco')} value={displayDepth(results.modDeco)} unit={depthLabel} subtitle={`ppO₂ ${ppO2Deco} bar`} accent={theme.accentSub} />
-        </>
-      ) : (
-        <Text style={[styles.emptyHint, { color: theme.textMuted }]}>{t('calc_enter_o2')}</Text>
-      )}
-
-      <SectionHeader title={t('calc_best_mix')} subtitle={t('calc_best_mix_subtitle')} />
-      <View style={[styles.card, { backgroundColor: theme.surface }]}>
-        <View style={styles.pickerRow}>
-          <DrumRollPicker
-            label={t('calc_target_depth')}
-            items={depthItems}
-            value={depth}
-            onChange={setDepth}
-          />
-        </View>
-      </View>
-      {results && (
-        <ResultCard title={`Best Mix O₂`} value={(results.bestMixVal * 100).toFixed(0)} unit="%" subtitle={`${depth}${depthLabel} / ppO₂ ${ppO2Work} bar`} accent="#008844" />
-      )}
-
-      <SectionHeader title={t('calc_ead')} />
-      {results ? (
-        <ResultCard
-          title="EAD"
-          value={results.eadVal < 0 ? '-' : displayDepth(results.eadVal)}
-          unit={results.eadVal < 0 ? '' : depthLabel}
-          subtitle={`Nitrox ${(fO2 * 100).toFixed(0)} / ${depth}${depthLabel}`}
-          accent="#7C3AED"
-          warning={results.eadVal < 0 ? t('calc_ead_negative') : undefined}
-        />
-      ) : <Text style={[styles.emptyHint, { color: theme.textMuted }]}>{t('calc_enter_gas')}</Text>}
-
-      <SectionHeader title={t('calc_end')} />
-      {results ? (
-        results.endVal !== null ? (
-          <ResultCard title="END" value={displayDepth(results.endVal)} unit={depthLabel} subtitle={`He ${(fHe * 100).toFixed(0)}% / ${depth}${depthLabel}`} accent="#CC5500" />
-        ) : (
-          <View style={[styles.infoBox, { backgroundColor: theme.successBg }]}>
-            <Text style={[styles.infoText, { color: theme.successText }]}>{t('calc_end_none')}</Text>
-          </View>
-        )
-      ) : <Text style={[styles.emptyHint, { color: theme.textMuted }]}>{t('calc_enter_gas')}</Text>}
-
+      {/* ── SAC Rate ── */}
       <SectionHeader title={t('calc_sac')} subtitle={t('calc_sac_subtitle')} />
       <View style={[styles.card, { backgroundColor: theme.surface }]}>
         <View style={styles.pickerRow}>
@@ -234,6 +169,7 @@ export default function CalculatorScreen() {
         <Text style={[styles.emptyHint, { color: theme.textMuted }]}>{t('calc_check_input')}</Text>
       )}
 
+      {/* ── Gas Endurance ── */}
       <SectionHeader title={t('calc_endurance')} subtitle={t('calc_endurance_subtitle')} />
       <View style={[styles.card, { backgroundColor: theme.surface }]}>
         <View style={styles.pickerRow}>
@@ -296,6 +232,77 @@ export default function CalculatorScreen() {
       ) : (
         <Text style={[styles.emptyHint, { color: theme.textMuted }]}>{t('calc_check_input')}</Text>
       )}
+
+      {/* ── Gas Settings ── */}
+      <SectionHeader title={t('calc_gas_settings')} subtitle={t('calc_gas_subtitle')} />
+      <View style={[styles.card, { backgroundColor: theme.surface }]}>
+        <GasSlider label="O₂ %" value={fO2} onChange={setFO2} min={0.04} max={Math.max(0.04, 1 - fHe)} step={0.01} />
+        <GasSlider label="He %" value={fHe} onChange={setFHe} min={0} max={Math.max(0, 1 - fO2)} step={0.01} />
+        <View style={[styles.n2Row, { borderTopColor: theme.surfaceAlt }]}>
+          <Text style={[styles.n2Label, { color: theme.textMuted }]}>{t('calc_n2_auto')}</Text>
+          <Text style={[styles.n2Value, { color: theme.text }]}>{(fN2 * 100).toFixed(0)} %</Text>
+        </View>
+        {mixLabel && (
+          <Text style={[styles.mixTag, { backgroundColor: theme.infoBg, color: theme.accent }]}>
+            {mixLabel}
+          </Text>
+        )}
+      </View>
+
+      {/* ── MOD ── */}
+      <SectionHeader
+        title={t('calc_mod')}
+        subtitle={`ppO₂ ${ppO2Work} / ${ppO2Deco} bar`}
+      />
+      {results ? (
+        <>
+          <ResultCard title={t('calc_mod_work')} value={displayDepth(results.modWork)} unit={depthLabel} subtitle={`ppO₂ ${ppO2Work} bar`} accent={theme.accent} />
+          <ResultCard title={t('calc_mod_deco')} value={displayDepth(results.modDeco)} unit={depthLabel} subtitle={`ppO₂ ${ppO2Deco} bar`} accent={theme.accentSub} />
+        </>
+      ) : (
+        <Text style={[styles.emptyHint, { color: theme.textMuted }]}>{t('calc_enter_o2')}</Text>
+      )}
+
+      {/* ── Best Mix ── */}
+      <SectionHeader title={t('calc_best_mix')} subtitle={t('calc_best_mix_subtitle')} />
+      <View style={[styles.card, { backgroundColor: theme.surface }]}>
+        <View style={styles.pickerRow}>
+          <DrumRollPicker
+            label={t('calc_target_depth')}
+            items={depthItems}
+            value={depth}
+            onChange={setDepth}
+          />
+        </View>
+      </View>
+      {results && (
+        <ResultCard title={`Best Mix O₂`} value={(results.bestMixVal * 100).toFixed(0)} unit="%" subtitle={`${depth}${depthLabel} / ppO₂ ${ppO2Work} bar`} accent="#008844" />
+      )}
+
+      {/* ── EAD ── */}
+      <SectionHeader title={t('calc_ead')} />
+      {results ? (
+        <ResultCard
+          title="EAD"
+          value={results.eadVal < 0 ? '-' : displayDepth(results.eadVal)}
+          unit={results.eadVal < 0 ? '' : depthLabel}
+          subtitle={`Nitrox ${(fO2 * 100).toFixed(0)} / ${depth}${depthLabel}`}
+          accent="#7C3AED"
+          warning={results.eadVal < 0 ? t('calc_ead_negative') : undefined}
+        />
+      ) : <Text style={[styles.emptyHint, { color: theme.textMuted }]}>{t('calc_enter_gas')}</Text>}
+
+      {/* ── END ── */}
+      <SectionHeader title={t('calc_end')} />
+      {results ? (
+        results.endVal !== null ? (
+          <ResultCard title="END" value={displayDepth(results.endVal)} unit={depthLabel} subtitle={`He ${(fHe * 100).toFixed(0)}% / ${depth}${depthLabel}`} accent="#CC5500" />
+        ) : (
+          <View style={[styles.infoBox, { backgroundColor: theme.successBg }]}>
+            <Text style={[styles.infoText, { color: theme.successText }]}>{t('calc_end_none')}</Text>
+          </View>
+        )
+      ) : <Text style={[styles.emptyHint, { color: theme.textMuted }]}>{t('calc_enter_gas')}</Text>}
 
       <View style={{ height: 40 }} />
     </ScrollView>
