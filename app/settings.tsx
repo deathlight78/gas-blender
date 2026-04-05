@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Alert, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Alert, StyleSheet, Linking } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import DrumRollPicker, { DRUM_PICKER_H } from '../src/components/ui/DrumRollPicker';
 import GasSlider from '../src/components/ui/GasSlider';
@@ -225,6 +225,13 @@ export default function SettingsScreen() {
       <View style={[styles.disclaimer, { backgroundColor: theme.warningBg }]}>
         <Text style={[styles.disclaimerText, { color: theme.warningText }]}>{t('settings_disclaimer')}</Text>
       </View>
+
+      <TouchableOpacity
+        style={[styles.feedbackBtn, { borderColor: theme.border }]}
+        onPress={() => Linking.openURL('mailto:deathlight78@gmail.com?subject=Gas Blender 피드백')}
+      >
+        <Text style={[styles.feedbackText, { color: theme.textMuted }]}>{t('settings_feedback')}</Text>
+      </TouchableOpacity>
       <View style={{ height: 40 }} />
     </ScrollView>
   );
@@ -270,4 +277,9 @@ const styles = StyleSheet.create({
   resetBtnText: { fontSize: 15, fontWeight: '600' },
   disclaimer: { borderRadius: 8, padding: 12, marginTop: 20 },
   disclaimerText: { fontSize: 12, lineHeight: 18 },
+  feedbackBtn: {
+    borderWidth: 1, borderRadius: 10, paddingVertical: 12,
+    alignItems: 'center', marginTop: 12,
+  },
+  feedbackText: { fontSize: 13 },
 });

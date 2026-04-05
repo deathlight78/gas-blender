@@ -168,6 +168,7 @@ export const ko = {
   settings_theme_light: '라이트',
   settings_theme_dark: '다크',
   settings_disclaimer: '⚠️ 이 앱의 계산 결과는 참고용입니다. 실제 다이빙 계획은 반드시 자격을 갖춘 강사와 함께 수립하세요.',
+  settings_feedback: '🐛 버그 신고 및 건의사항',
   settings_err_ppo2_work_range: 'ppO₂ 작업 한계는 0.16~2.0 범위여야 합니다.',
   settings_err_ppo2_deco_range: 'ppO₂ 감압 한계는 0.16~2.0 범위여야 합니다.',
   settings_err_ppo2_order: 'ppO₂ 작업 한계는 감압 한계보다 낮아야 합니다.',

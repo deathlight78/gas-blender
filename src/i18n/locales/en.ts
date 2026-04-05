@@ -168,6 +168,7 @@ export const en = {
   settings_theme_light: 'Light',
   settings_theme_dark: 'Dark',
   settings_disclaimer: '⚠️ Calculations are for reference only. Always plan with a qualified instructor.',
+  settings_feedback: '🐛 Bug Report & Suggestions',
   settings_err_ppo2_work_range: 'ppO₂ working limit must be between 0.16 and 2.0.',
   settings_err_ppo2_deco_range: 'ppO₂ deco limit must be between 0.16 and 2.0.',
   settings_err_ppo2_order: 'Working ppO₂ must be lower than deco limit.',
