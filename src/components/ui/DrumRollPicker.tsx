@@ -74,9 +74,11 @@ export default function DrumRollPicker({ label, items, value, onChange, formatVa
 
   const panResponder = useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder:     () => true,
-      onMoveShouldSetPanResponder:      () => true,
-      onPanResponderTerminationRequest: () => false,
+      onStartShouldSetPanResponder:        () => true,
+      onStartShouldSetPanResponderCapture: () => true,
+      onMoveShouldSetPanResponder:         () => true,
+      onMoveShouldSetPanResponderCapture:  () => true,
+      onPanResponderTerminationRequest:    () => false,
 
       onPanResponderGrant: () => {
         // 진행 중인 관성 애니메이션을 중단하고 현재 위치 저장
@@ -120,7 +122,9 @@ export default function DrumRollPicker({ label, items, value, onChange, formatVa
   return (
     <View style={[styles.container, style]}>
       <Text style={[styles.label, { color: theme.textMuted }]}>{label}</Text>
-      <View style={styles.wrap} {...panResponder.panHandlers}>
+      <View style={styles.wrap} {...panResponder.panHandlers} // @ts-ignore — web only
+        onTouchStart={(e) => e.stopPropagation()}
+      >
         <View style={[styles.line, { top: CENTER * DRUM_ITEM_H,       backgroundColor: theme.accent }]} />
         <View style={[styles.line, { top: (CENTER + 1) * DRUM_ITEM_H, backgroundColor: theme.accent }]} />
 
@@ -151,7 +155,7 @@ export default function DrumRollPicker({ label, items, value, onChange, formatVa
 const styles = StyleSheet.create({
   container: { flex: 1, alignItems: 'center' },
   label:     { fontSize: 10, fontWeight: '600', marginBottom: 4, letterSpacing: 0.5 },
-  wrap:      { height: DRUM_PICKER_H, width: '100%', overflow: 'hidden' },
+  wrap:      { height: DRUM_PICKER_H, width: '100%', overflow: 'hidden', touchAction: 'none' } as any,
   line: {
     position: 'absolute', left: 4, right: 4, height: 1, zIndex: 2, opacity: 0.35,
   },
