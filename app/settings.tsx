@@ -1,9 +1,10 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useMemo, useRef, useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Alert, StyleSheet } from 'react-native';
 import { useFocusEffect } from 'expo-router';
-import NumericInput from '../src/components/ui/NumericInput';
+import DrumRollPicker, { DRUM_PICKER_H } from '../src/components/ui/DrumRollPicker';
 import GasSlider from '../src/components/ui/GasSlider';
 import SectionHeader from '../src/components/ui/SectionHeader';
+import { buildRange } from '../src/lib/utils/ranges';
 import { useSettingsStore } from '../src/store/settings.store';
 import { useAppStore } from '../src/store/app.store';
 import { useAppTheme } from '../src/context/ThemeContext';
@@ -44,6 +45,13 @@ function ToggleGroup<T extends string>({
   );
 }
 
+// ppO2 범위: 1.0 ~ 2.0, step 0.05
+const PPO2_ITEMS = buildRange(1.0, 2.0, 0.05);
+// 상승 속도: 1~30 m/min
+const ASCENT_ITEMS = buildRange(1, 30, 1);
+// 하강 속도: 1~50 m/min
+const DESCENT_ITEMS = buildRange(1, 50, 1);
+
 export default function SettingsScreen() {
   const scrollRef = useRef<ScrollView>(null);
   const theme = useAppTheme();
@@ -55,30 +63,25 @@ export default function SettingsScreen() {
   const store = useSettingsStore();
   const { language, setLanguage, themeOverride, setThemeOverride } = useAppStore();
 
-  const [ppO2Work, setPpO2Work] = useState(String(store.ppO2Work));
-  const [ppO2Deco, setPpO2Deco] = useState(String(store.ppO2Deco));
-  const [ascentRate, setAscentRate] = useState(String(store.ascentRate));
-  const [descentRate, setDescentRate] = useState(String(store.descentRate));
+  const [ppO2Work, setPpO2Work] = useState(store.ppO2Work);
+  const [ppO2Deco, setPpO2Deco] = useState(store.ppO2Deco);
+  const [ascentRate, setAscentRate] = useState(store.ascentRate);
+  const [descentRate, setDescentRate] = useState(store.descentRate);
   const [gfLow, setGfLow] = useState(store.gfLow);
   const [gfHigh, setGfHigh] = useState(store.gfHigh);
 
   function save() {
-    const w = parseFloat(ppO2Work);
-    const d = parseFloat(ppO2Deco);
-    const asc = parseFloat(ascentRate);
-    const desc = parseFloat(descentRate);
+    if (ppO2Work < 1.0 || ppO2Work > 2.0) { Alert.alert(t('error'), t('settings_err_ppo2_work_range')); return; }
+    if (ppO2Deco < 1.0 || ppO2Deco > 2.0) { Alert.alert(t('error'), t('settings_err_ppo2_deco_range')); return; }
+    if (ppO2Work > ppO2Deco) { Alert.alert(t('error'), t('settings_err_ppo2_order')); return; }
+    if (ascentRate <= 0) { Alert.alert(t('error'), t('settings_err_ascent_rate')); return; }
+    if (descentRate <= 0) { Alert.alert(t('error'), t('settings_err_descent_rate')); return; }
 
-    if (isNaN(w) || w < 0.16 || w > 2.0) { Alert.alert(t('error'), t('settings_err_ppo2_work_range')); return; }
-    if (isNaN(d) || d < 0.16 || d > 2.0) { Alert.alert(t('error'), t('settings_err_ppo2_deco_range')); return; }
-    if (w > d) { Alert.alert(t('error'), t('settings_err_ppo2_order')); return; }
-    if (isNaN(asc) || asc <= 0) { Alert.alert(t('error'), t('settings_err_ascent_rate')); return; }
-    if (isNaN(desc) || desc <= 0) { Alert.alert(t('error'), t('settings_err_descent_rate')); return; }
-
-    store.setPpO2Work(w);
-    store.setPpO2Deco(d);
+    store.setPpO2Work(ppO2Work);
+    store.setPpO2Deco(ppO2Deco);
     store.setGf(gfLow, gfHigh);
-    store.setAscentRate(asc);
-    store.setDescentRate(desc);
+    store.setAscentRate(ascentRate);
+    store.setDescentRate(descentRate);
     Alert.alert(t('confirm'), t('settings_save_done'));
   }
 
@@ -90,10 +93,10 @@ export default function SettingsScreen() {
         style: 'destructive',
         onPress: () => {
           store.resetToDefaults();
-          setPpO2Work('1.4');
-          setPpO2Deco('1.6');
-          setAscentRate('9');
-          setDescentRate('20');
+          setPpO2Work(1.4);
+          setPpO2Deco(1.6);
+          setAscentRate(9);
+          setDescentRate(20);
           setGfLow(0.3);
           setGfHigh(0.8);
         },
@@ -109,10 +112,26 @@ export default function SettingsScreen() {
     >
       <SectionHeader title={t('settings_ppo2')} subtitle={t('settings_ppo2_subtitle')} />
       <View style={[styles.card, { backgroundColor: theme.surface }]}>
-        <NumericInput label={t('settings_ppo2_work')} value={ppO2Work} onChangeText={setPpO2Work} unit="bar" hint={t('settings_ppo2_work_hint')} />
-        <NumericInput label={t('settings_ppo2_deco')} value={ppO2Deco} onChangeText={setPpO2Deco} unit="bar" hint={t('settings_ppo2_deco_hint')} />
-        {parseFloat(ppO2Work) > 1.4 && <Text style={[styles.cautionText, { color: theme.warningText }]}>{t('settings_warn_ppo2_work')}</Text>}
-        {parseFloat(ppO2Deco) > 1.6 && <Text style={[styles.cautionText, { color: theme.warningText }]}>{t('settings_warn_ppo2_deco')}</Text>}
+        <View style={styles.pickerRow}>
+          <DrumRollPicker
+            label={t('settings_ppo2_work')}
+            items={PPO2_ITEMS}
+            value={ppO2Work}
+            onChange={setPpO2Work}
+            formatValue={(v) => v.toFixed(2)}
+          />
+          <View style={[styles.divider, { backgroundColor: theme.border }]} />
+          <DrumRollPicker
+            label={t('settings_ppo2_deco')}
+            items={PPO2_ITEMS}
+            value={ppO2Deco}
+            onChange={setPpO2Deco}
+            formatValue={(v) => v.toFixed(2)}
+          />
+        </View>
+        {ppO2Work > 1.4 && <Text style={[styles.cautionText, { color: theme.warningText }]}>{t('settings_warn_ppo2_work')}</Text>}
+        {ppO2Deco > 1.6 && <Text style={[styles.cautionText, { color: theme.warningText }]}>{t('settings_warn_ppo2_deco')}</Text>}
+        <Text style={[styles.hintText, { color: theme.textMuted }]}>{t('settings_ppo2_work_hint')}</Text>
       </View>
 
       <SectionHeader title={t('settings_gf')} subtitle={t('settings_gf_subtitle')} />
@@ -154,8 +173,22 @@ export default function SettingsScreen() {
 
       <SectionHeader title={t('settings_rates')} />
       <View style={[styles.card, { backgroundColor: theme.surface }]}>
-        <NumericInput label={t('settings_ascent')} value={ascentRate} onChangeText={setAscentRate} unit="m/min" hint={t('settings_ascent_hint')} />
-        <NumericInput label={t('settings_descent')} value={descentRate} onChangeText={setDescentRate} unit="m/min" hint={t('settings_descent_hint')} />
+        <View style={styles.pickerRow}>
+          <DrumRollPicker
+            label={t('settings_ascent')}
+            items={ASCENT_ITEMS}
+            value={ascentRate}
+            onChange={setAscentRate}
+          />
+          <View style={[styles.divider, { backgroundColor: theme.border }]} />
+          <DrumRollPicker
+            label={t('settings_descent')}
+            items={DESCENT_ITEMS}
+            value={descentRate}
+            onChange={setDescentRate}
+          />
+        </View>
+        <Text style={[styles.hintText, { color: theme.textMuted }]}>{t('settings_ascent_hint')}</Text>
       </View>
 
       <SectionHeader title={t('settings_appearance')} />
@@ -200,11 +233,34 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { padding: 16 },
-  card: { borderRadius: 12, padding: 16, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 6, elevation: 2, marginBottom: 4 },
-  cautionText: { fontSize: 12, marginTop: 4 },
+  card: {
+    borderRadius: 12,
+    paddingTop: 10,
+    paddingHorizontal: 6,
+    paddingBottom: 8,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
+    marginBottom: 4,
+  },
+  pickerRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    paddingHorizontal: 2,
+  },
+  divider: {
+    width: 1,
+    alignSelf: 'stretch',
+    marginHorizontal: 2,
+    marginTop: 18,
+    backgroundColor: 'transparent',
+  },
+  cautionText: { fontSize: 12, marginTop: 4, paddingHorizontal: 8 },
+  hintText: { fontSize: 11, marginTop: 6, paddingHorizontal: 8, textAlign: 'center' },
   gfHint: { fontSize: 12, marginTop: 8, textAlign: 'center' },
-  toggleLabel: { fontSize: 13, fontWeight: '600', marginBottom: 8 },
-  toggleRow: { flexDirection: 'row', gap: 8 },
+  toggleLabel: { fontSize: 13, fontWeight: '600', marginBottom: 8, paddingHorizontal: 8 },
+  toggleRow: { flexDirection: 'row', gap: 8, paddingHorizontal: 4 },
   toggleBtn: { flex: 1, paddingVertical: 10, borderRadius: 8, alignItems: 'center' },
   toggleText: { fontSize: 13, fontWeight: '600' },
   btnRow: { flexDirection: 'row', gap: 10, marginTop: 20 },

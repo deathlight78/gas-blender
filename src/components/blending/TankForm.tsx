@@ -5,6 +5,7 @@ import SectionHeader from '../ui/SectionHeader';
 import { useAppTheme } from '../../context/ThemeContext';
 import { useTranslation } from '../../i18n';
 import { PressureUnit } from '../../types/gas.types';
+import { buildRange } from '../../lib/utils/ranges';
 
 interface TankValues {
   pressure: string;
@@ -18,14 +19,6 @@ interface TankFormProps {
   onChange: (values: TankValues) => void;
   pressureUnit: PressureUnit;
   errors?: { pressure?: string };
-}
-
-function buildRange(min: number, max: number, step = 1): number[] {
-  const arr: number[] = [];
-  for (let v = min; v <= max; v = Math.round((v + step) * 1000) / 1000) {
-    arr.push(v);
-  }
-  return arr;
 }
 
 const O2_ITEMS = buildRange(4, 100);

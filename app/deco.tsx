@@ -1,7 +1,7 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useMemo, useRef, useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { useFocusEffect } from 'expo-router';
-import NumericInput from '../src/components/ui/NumericInput';
+import DrumRollPicker, { DRUM_PICKER_H } from '../src/components/ui/DrumRollPicker';
 import GasSlider from '../src/components/ui/GasSlider';
 import SectionHeader from '../src/components/ui/SectionHeader';
 import DecoTable from '../src/components/deco/DecoTable';
@@ -9,11 +9,12 @@ import DecoSummary from '../src/components/deco/DecoSummary';
 import { planDeco } from '../src/lib/deco/deco-planner';
 import { DecoResult, DecoInput } from '../src/types/deco.types';
 import { GasMix } from '../src/types/gas.types';
+import { buildRange } from '../src/lib/utils/ranges';
 import { useSettingsStore } from '../src/store/settings.store';
 import { useAppTheme } from '../src/context/ThemeContext';
 import { useTranslation } from '../src/i18n';
 
-interface DecoGasRow { id: number; switchDepth: string; fO2: number; fHe: number }
+interface DecoGasRow { id: number; switchDepth: number; fO2: number; fHe: number }
 let nextId = 1;
 
 export default function DecoScreen() {
@@ -26,48 +27,59 @@ export default function DecoScreen() {
   }, []));
   const { t } = useTranslation();
 
-  const [targetDepth, setTargetDepth] = useState('40');
-  const [bottomTime, setBottomTime] = useState('30');
+  const [targetDepth, setTargetDepth] = useState(40);
+  const [bottomTime, setBottomTime] = useState(30);
   const [bottomFO2, setBottomFO2] = useState(0.21);
   const [bottomFHe, setBottomFHe] = useState(0.35);
-  const [gfLoStr, setGfLoStr] = useState(String(Math.round(gfLow * 100)));
-  const [gfHiStr, setGfHiStr] = useState(String(Math.round(gfHigh * 100)));
+  const [gfLo, setGfLo] = useState(Math.round(gfLow * 100));
+  const [gfHi, setGfHi] = useState(Math.round(gfHigh * 100));
   const [decoGases, setDecoGases] = useState<DecoGasRow[]>([
-    { id: nextId++, switchDepth: '21', fO2: 0.5, fHe: 0 },
-    { id: nextId++, switchDepth: '6', fO2: 1.0, fHe: 0 },
+    { id: nextId++, switchDepth: 21, fO2: 0.5, fHe: 0 },
+    { id: nextId++, switchDepth: 6, fO2: 1.0, fHe: 0 },
   ]);
   const [result, setResult] = useState<DecoResult | null>(null);
   const [bottomRunTime, setBottomRunTime] = useState(0);
 
   const depthLabel = depthUnit === 'ft' ? 'ft' : 'm';
-  function toM(v: string) { const n = parseFloat(v) || 0; return depthUnit === 'ft' ? n * 0.3048 : n; }
+  function toM(v: number) { return depthUnit === 'ft' ? v * 0.3048 : v; }
+
+  // 범위 배열
+  const targetDepthItems = useMemo(
+    () => depthUnit === 'ft' ? buildRange(16, 330, 3) : buildRange(5, 100, 1),
+    [depthUnit],
+  );
+  const switchDepthItems = useMemo(
+    () => depthUnit === 'ft' ? buildRange(10, 300, 10) : buildRange(3, 90, 3),
+    [depthUnit],
+  );
+  const bottomTimeItems = useMemo(() => buildRange(1, 180, 1), []);
+  const gfItems = useMemo(() => buildRange(10, 100, 5), []);
 
   function calculate() {
     const depthM = toM(targetDepth);
-    const btMin = parseFloat(bottomTime) || 0;
-    const gfLo = (parseFloat(gfLoStr) || 30) / 100;
-    const gfHi = (parseFloat(gfHiStr) || 85) / 100;
+    const gfLoVal = gfLo / 100;
+    const gfHiVal = gfHi / 100;
 
     if (depthM <= 0) { Alert.alert(t('error'), t('deco_err_depth')); return; }
-    if (btMin <= 0) { Alert.alert(t('error'), t('deco_err_bottom_time')); return; }
-    if (gfLo > gfHi) { Alert.alert(t('error'), t('deco_err_gf')); return; }
+    if (bottomTime <= 0) { Alert.alert(t('error'), t('deco_err_bottom_time')); return; }
+    if (gfLoVal > gfHiVal) { Alert.alert(t('error'), t('deco_err_gf')); return; }
 
     const bottomMix: GasMix = { fO2: bottomFO2, fHe: bottomFHe, fN2: Math.max(0, 1 - bottomFO2 - bottomFHe) };
     const descMin = depthM / descentRate;
     const input: DecoInput = {
       segments: [
         { type: 'descent', startDepth: 0, endDepth: depthM, time: descMin, gas: bottomMix },
-        { type: 'bottom', startDepth: depthM, endDepth: depthM, time: btMin, gas: bottomMix },
+        { type: 'bottom', startDepth: depthM, endDepth: depthM, time: bottomTime, gas: bottomMix },
       ],
       decoGases: decoGases
         .map((dg) => ({ switchDepth: toM(dg.switchDepth), mix: { fO2: dg.fO2, fHe: dg.fHe, fN2: Math.max(0, 1 - dg.fO2 - dg.fHe) } }))
         .sort((a, b) => b.switchDepth - a.switchDepth),
-      gfLow: gfLo, gfHigh: gfHi, ascentRate, descentRate, airO2, airN2,
+      gfLow: gfLoVal, gfHigh: gfHiVal, ascentRate, descentRate, airO2, airN2,
     };
 
     try {
       setResult(planDeco(input));
-      setBottomRunTime(Math.ceil(descMin + btMin));
+      setBottomRunTime(Math.ceil(descMin + bottomTime));
     } catch {
       Alert.alert(t('error'), t('deco_err_input'));
     }
@@ -82,9 +94,20 @@ export default function DecoScreen() {
     <ScrollView ref={scrollRef} style={[styles.container, { backgroundColor: theme.background }]} contentContainerStyle={styles.content}>
       <SectionHeader title={t('deco_profile')} />
       <View style={[styles.card, { backgroundColor: theme.surface }]}>
-        <View style={styles.row2}>
-          <NumericInput label={t('deco_target_depth')} value={targetDepth} onChangeText={setTargetDepth} unit={depthLabel} containerStyle={styles.half} />
-          <NumericInput label={t('deco_bottom_time')} value={bottomTime} onChangeText={setBottomTime} unit="min" containerStyle={styles.half} />
+        <View style={styles.pickerRow}>
+          <DrumRollPicker
+            label={t('deco_target_depth')}
+            items={targetDepthItems}
+            value={targetDepth}
+            onChange={setTargetDepth}
+          />
+          <View style={[styles.divider, { backgroundColor: theme.border }]} />
+          <DrumRollPicker
+            label={t('deco_bottom_time')}
+            items={bottomTimeItems}
+            value={bottomTime}
+            onChange={setBottomTime}
+          />
         </View>
       </View>
 
@@ -109,23 +132,42 @@ export default function DecoScreen() {
               <Text style={[styles.removeBtn, { color: theme.textMuted }]}>✕</Text>
             </TouchableOpacity>
           </View>
-          <View style={styles.row2}>
-            <NumericInput label={t('deco_switch_depth')} value={dg.switchDepth} onChangeText={(v) => setDecoGases((p) => p.map((g) => g.id === dg.id ? { ...g, switchDepth: v } : g))} unit={depthLabel} containerStyle={styles.half} />
-            <View style={styles.half}>
+          <View style={styles.pickerRow}>
+            <DrumRollPicker
+              label={t('deco_switch_depth')}
+              items={switchDepthItems}
+              value={dg.switchDepth}
+              onChange={(v) => setDecoGases((p) => p.map((g) => g.id === dg.id ? { ...g, switchDepth: v } : g))}
+            />
+            <View style={[styles.divider, { backgroundColor: theme.border }]} />
+            <View style={styles.gasSliderHalf}>
               <GasSlider label="O₂ %" value={dg.fO2} onChange={(v) => setDecoGases((p) => p.map((g) => g.id === dg.id ? { ...g, fO2: v } : g))} min={0.04} max={1} step={0.01} />
             </View>
           </View>
         </View>
       ))}
-      <TouchableOpacity style={[styles.addGasBtn, { borderColor: theme.accent }]} onPress={() => setDecoGases((p) => [...p, { id: nextId++, switchDepth: '9', fO2: 0.36, fHe: 0 }])}>
+      <TouchableOpacity style={[styles.addGasBtn, { borderColor: theme.accent }]} onPress={() => setDecoGases((p) => [...p, { id: nextId++, switchDepth: 9, fO2: 0.36, fHe: 0 }])}>
         <Text style={[styles.addGasBtnText, { color: theme.accent }]}>{t('deco_add_gas')}</Text>
       </TouchableOpacity>
 
       <SectionHeader title={t('deco_gf')} subtitle={t('deco_gf_subtitle')} />
       <View style={[styles.card, { backgroundColor: theme.surface }]}>
-        <View style={styles.row2}>
-          <NumericInput label={t('deco_gf_low')} value={gfLoStr} onChangeText={setGfLoStr} unit="%" containerStyle={styles.half} />
-          <NumericInput label={t('deco_gf_high')} value={gfHiStr} onChangeText={setGfHiStr} unit="%" containerStyle={styles.half} />
+        <View style={styles.pickerRow}>
+          <DrumRollPicker
+            label={t('deco_gf_low')}
+            items={gfItems}
+            value={gfLo}
+            onChange={setGfLo}
+            formatValue={(v) => `${v}%`}
+          />
+          <View style={[styles.divider, { backgroundColor: theme.border }]} />
+          <DrumRollPicker
+            label={t('deco_gf_high')}
+            items={gfItems}
+            value={gfHi}
+            onChange={setGfHi}
+            formatValue={(v) => `${v}%`}
+          />
         </View>
       </View>
 
@@ -135,7 +177,7 @@ export default function DecoScreen() {
 
       {result && (
         <>
-          <SectionHeader title={t('deco_result')} subtitle={`GF ${gfLoStr}/${gfHiStr} · ${t('deco_ascent_label')} ${ascentRate}m/min`} />
+          <SectionHeader title={t('deco_result')} subtitle={`GF ${gfLo}/${gfHi} · ${t('deco_ascent_label')} ${ascentRate}m/min`} />
           <DecoSummary result={result} />
           <SectionHeader title={t('deco_table')} />
           <DecoTable stops={result.stops} bottomRunTime={bottomRunTime} ascentRate={ascentRate} />
@@ -167,9 +209,30 @@ export default function DecoScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { padding: 16 },
-  card: { borderRadius: 12, padding: 16, marginBottom: 4, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 6, elevation: 2 },
-  row2: { flexDirection: 'row', gap: 10 },
-  half: { flex: 1 },
+  card: {
+    borderRadius: 12,
+    paddingTop: 10,
+    paddingHorizontal: 6,
+    paddingBottom: 8,
+    marginBottom: 4,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  pickerRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    paddingHorizontal: 2,
+  },
+  divider: {
+    width: 1,
+    alignSelf: 'stretch',
+    marginHorizontal: 2,
+    marginTop: 18,
+    backgroundColor: 'transparent',
+  },
+  gasSliderHalf: { flex: 1, paddingHorizontal: 8 },
   mixInfo: { flexDirection: 'row', justifyContent: 'space-between', paddingTop: 8, borderTopWidth: 1, marginTop: 4 },
   mixLabel: { fontSize: 13, fontWeight: '600' },
   n2Text: { fontSize: 13 },
