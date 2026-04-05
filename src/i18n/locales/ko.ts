@@ -4,6 +4,7 @@ export const ko = {
   tab_blending: '블렌딩',
   tab_calculator: '계산기',
   tab_gas_info: '기체 분석',
+  tab_gas_plan: '가스 계획',
   tab_deco: '감압 계획',
   tab_settings: '설정',
 
@@ -170,6 +171,20 @@ export const ko = {
   settings_gf_moderate: '중간',
   settings_depth_m: '미터 (m)',
   settings_depth_ft: '피트 (ft)',
+
+  // 가스 계획
+  gplan_avg_depth_suffix: '평균 수심 기준',
+  gplan_tanks: '탱크 계획',
+  gplan_tanks_subtitle: '탱크별 가스 사용 가능 시간 계산',
+  gplan_conditions: '계획 조건 (전 탱크 공통)',
+  gplan_depth: '계획 수심',
+  gplan_add_tank: '+ 탱크 추가',
+  gplan_tank_label: '탱크',
+  gplan_volume: '용량 (L)',
+  gplan_start_pressure: '시작 압력',
+  gplan_reserve: '예비 압력',
+  gplan_usable_gas: '사용 가능 기체량',
+  gplan_time: '예상 사용 시간',
 
   // 면책 조항
   disclaimer_title: '⚠️ 중요 안전 안내',

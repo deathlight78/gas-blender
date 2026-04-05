@@ -4,6 +4,7 @@ export const en = {
   tab_blending: 'Blending',
   tab_calculator: 'Calculator',
   tab_gas_info: 'Gas Info',
+  tab_gas_plan: 'Gas Plan',
   tab_deco: 'Deco Plan',
   tab_settings: 'Settings',
 
@@ -170,6 +171,20 @@ export const en = {
   settings_gf_moderate: 'Moderate',
   settings_depth_m: 'Meters (m)',
   settings_depth_ft: 'Feet (ft)',
+
+  // Gas Plan
+  gplan_avg_depth_suffix: 'avg depth basis',
+  gplan_tanks: 'Tank Plan',
+  gplan_tanks_subtitle: 'Usable gas & duration per tank',
+  gplan_conditions: 'Plan Conditions (all tanks)',
+  gplan_depth: 'Plan Depth',
+  gplan_add_tank: '+ Add Tank',
+  gplan_tank_label: 'Tank',
+  gplan_volume: 'Volume (L)',
+  gplan_start_pressure: 'Start Pressure',
+  gplan_reserve: 'Reserve',
+  gplan_usable_gas: 'Usable Gas',
+  gplan_time: 'Est. Duration',
 
   // Disclaimer
   disclaimer_title: '⚠️ Important Safety Notice',

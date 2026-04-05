@@ -54,6 +54,15 @@ function TabNavigator() {
           }}
         />
         <Tabs.Screen
+          name="gas-plan"
+          options={{
+            title: t('tab_gas_plan'),
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons name="speedometer-outline" size={size} color={color} />
+            ),
+          }}
+        />
+        <Tabs.Screen
           name="deco"
           options={{
             title: t('tab_deco'),
