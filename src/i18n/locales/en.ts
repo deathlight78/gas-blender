@@ -139,6 +139,15 @@ export const en = {
   deco_warn_cns_suffix: '— oxygen toxicity risk',
   deco_warn_otu_suffix: '— daily limit (300 OTU) exceeded',
   deco_ascent_label: 'Asc',
+  deco_last_stop: 'Last Stop Depth',
+  deco_rmv: 'RMV Settings',
+  deco_rmv_subtitle: 'Auto-calculates gas consumption (skip if not set)',
+  deco_rmv_bottom: 'Bottom RMV',
+  deco_rmv_deco: 'Deco RMV',
+  deco_gas_consumption: 'Estimated Gas Consumption',
+  deco_icd_warning: '⚠ ICD Warning',
+  deco_icd_detail: '{depth}m switch: N₂ {prev}% → {next}% (reverse increase)',
+  deco_icd_note: 'Reverse gas switch may cause Inert Composition Discrepancy (ICD).',
 
   // Settings
   settings_ppo2: 'ppO₂ Limits',

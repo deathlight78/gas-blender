@@ -139,6 +139,15 @@ export const ko = {
   deco_warn_cns_suffix: '— 산소 독성 위험 수준',
   deco_warn_otu_suffix: '— 일일 한계(300 OTU) 초과',
   deco_ascent_label: '상승',
+  deco_last_stop: '마지막 정지 수심',
+  deco_rmv: 'RMV 설정',
+  deco_rmv_subtitle: '가스 소비량 자동 계산 (미입력 시 생략)',
+  deco_rmv_bottom: '바닥 RMV',
+  deco_rmv_deco: '감압 RMV',
+  deco_gas_consumption: '기체별 예상 소비량',
+  deco_icd_warning: '⚠ ICD 경고',
+  deco_icd_detail: '{depth}m 전환: N₂ {prev}% → {next}% (역방향 증가)',
+  deco_icd_note: '역방향 가스 전환은 불활성 기체 불균형(ICD)을 유발할 수 있습니다.',
 
   // 설정
   settings_ppo2: 'ppO₂ 한계',
