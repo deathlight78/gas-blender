@@ -11,16 +11,18 @@ import { useSettingsStore } from '../src/store/settings.store';
 import { useAppTheme } from '../src/context/ThemeContext';
 import { useTranslation } from '../src/i18n';
 
-interface TankRow {
+interface CylinderRow {
   id: number;
   fO2: number;
   fHe: number;
   volume: number;
   pressure: number;
   reserve: number;
+  planDepth: number;
+  planSacRate: number;
 }
 
-let nextTankId = 1;
+let nextCylId = 1;
 
 function toMeters(v: number, unit: 'ft' | 'm') { return unit === 'ft' ? v * 0.3048 : v; }
 function toBar(v: number, unit: 'bar' | 'psi') { return unit === 'psi' ? v / 14.5038 : v; }
@@ -48,13 +50,11 @@ export default function GasPlanScreen() {
   const [endDepth, setEndDepth]                     = useState(30);
   const [endSacRate, setEndSacRate]                 = useState(20);
 
-  // 탱크 계획 상태
-  const [planDepth, setPlanDepth]       = useState(40);
-  const [planSacRate, setPlanSacRate]   = useState(20);
-  const [tanks, setTanks] = useState<TankRow[]>([
-    { id: nextTankId++, fO2: 0.21, fHe: 0,    volume: 12, pressure: 200, reserve: 50 },
-    { id: nextTankId++, fO2: 0.50, fHe: 0,    volume: 11, pressure: 200, reserve: 50 },
-    { id: nextTankId++, fO2: 1.00, fHe: 0,    volume: 7,  pressure: 200, reserve: 50 },
+  // 실린더 계획 상태
+  const [cylinders, setCylinders] = useState<CylinderRow[]>([
+    { id: nextCylId++, fO2: 0.21, fHe: 0,   volume: 12, pressure: 200, reserve: 50, planDepth: 40, planSacRate: 20 },
+    { id: nextCylId++, fO2: 0.50, fHe: 0,   volume: 11, pressure: 200, reserve: 50, planDepth: 21, planSacRate: 20 },
+    { id: nextCylId++, fO2: 1.00, fHe: 0,   volume: 7,  pressure: 200, reserve: 50, planDepth: 6,  planSacRate: 20 },
   ]);
 
   const depthLabel    = depthUnit    === 'ft'  ? 'ft'  : 'm';
@@ -73,11 +73,11 @@ export default function GasPlanScreen() {
   const endReserveItems = useMemo(
     () => pressureUnit === 'psi' ? buildRange(0, 2900, 50) : buildRange(0, 200, 5), [pressureUnit],
   );
-  const tankPressureItems = endPressureItems;
-  const tankReserveItems  = endReserveItems;
-  const tankVolumeItems   = useMemo(() => buildRange(1, 30, 1), []);
-  const diveTimeItems     = useMemo(() => buildRange(1, 180, 1), []);
-  const sacRateItems      = useMemo(() => buildRange(5, 60, 1), []);
+  const cylPressureItems = endPressureItems;
+  const cylReserveItems  = endReserveItems;
+  const cylVolumeItems   = useMemo(() => buildRange(1, 30, 1), []);
+  const diveTimeItems    = useMemo(() => buildRange(1, 180, 1), []);
+  const sacRateItems     = useMemo(() => buildRange(5, 60, 1), []);
 
   // SAC 계산
   const sacPressureBar = useMemo(
@@ -102,26 +102,30 @@ export default function GasPlanScreen() {
     });
   }, [endCurrentBar, endReserveBar, endTankVolume, endDepth, endSacRate, depthUnit]);
 
-  // 탱크별 계산
-  const planDepthM  = useMemo(() => toMeters(planDepth, depthUnit), [planDepth, depthUnit]);
-  const tankResults = useMemo(() => tanks.map((tank) => {
-    const startBar   = toBar(tank.pressure, pressureUnit);
-    const reserveBar = toBar(tank.reserve,  pressureUnit);
-    if (startBar <= 0 || tank.volume <= 0 || planSacRate <= 0) return null;
+  // 실린더별 계산 (각자의 수심·SAC 사용)
+  const cylResults = useMemo(() => cylinders.map((cyl) => {
+    const startBar   = toBar(cyl.pressure, pressureUnit);
+    const reserveBar = toBar(cyl.reserve,  pressureUnit);
+    if (startBar <= 0 || cyl.volume <= 0 || cyl.planSacRate <= 0) return null;
     return calcGasEndurance({
       currentPressure: startBar, reservePressure: reserveBar,
-      tankVolume: tank.volume, depth: planDepthM, sacRate: planSacRate,
+      tankVolume: cyl.volume,
+      depth: toMeters(cyl.planDepth, depthUnit),
+      sacRate: cyl.planSacRate,
     });
-  }), [tanks, pressureUnit, planDepthM, planSacRate]);
+  }), [cylinders, pressureUnit, depthUnit]);
 
-  function addTank() {
-    setTanks(p => [...p, { id: nextTankId++, fO2: 0.21, fHe: 0, volume: 12, pressure: 200, reserve: 50 }]);
+  function addCylinder() {
+    setCylinders(p => [...p, {
+      id: nextCylId++, fO2: 0.21, fHe: 0, volume: 12,
+      pressure: 200, reserve: 50, planDepth: 40, planSacRate: 20,
+    }]);
   }
-  function removeTank(id: number) {
-    setTanks(p => p.filter(t => t.id !== id));
+  function removeCylinder(id: number) {
+    setCylinders(p => p.filter(c => c.id !== id));
   }
-  function updateTank(id: number, patch: Partial<TankRow>) {
-    setTanks(p => p.map(t => t.id === id ? { ...t, ...patch } : t));
+  function updateCylinder(id: number, patch: Partial<CylinderRow>) {
+    setCylinders(p => p.map(c => c.id === id ? { ...c, ...patch } : c));
   }
 
   return (
@@ -134,19 +138,19 @@ export default function GasPlanScreen() {
       <SectionHeader title={t('calc_sac')} subtitle={t('calc_sac_subtitle')} />
       <View style={[styles.card, { backgroundColor: theme.surface }]}>
         <View style={styles.pickerRow}>
-          <DrumRollPicker label={t('calc_sac_pressure_used')} items={pressureItems}    value={sacPressureUsed} onChange={setSacPressureUsed} />
+          <DrumRollPicker label={t('calc_sac_pressure_used')} items={pressureItems}  value={sacPressureUsed} onChange={setSacPressureUsed} />
           <View style={[styles.divider, { backgroundColor: theme.border }]} />
-          <DrumRollPicker label={t('calc_sac_tank_volume')}   items={tankVolumeItems} value={sacTankVolume}   onChange={setSacTankVolume} />
+          <DrumRollPicker label={t('calc_sac_tank_volume')}   items={cylVolumeItems} value={sacTankVolume}   onChange={setSacTankVolume} />
         </View>
         <View style={styles.pickerRow}>
-          <DrumRollPicker label={t('calc_sac_avg_depth')}  items={depthItems}    value={sacAvgDepth}  onChange={setSacAvgDepth} />
+          <DrumRollPicker label={t('calc_sac_avg_depth')} items={depthItems}    value={sacAvgDepth} onChange={setSacAvgDepth} />
           <View style={[styles.divider, { backgroundColor: theme.border }]} />
-          <DrumRollPicker label={t('calc_sac_dive_time')}  items={diveTimeItems} value={sacDiveTime}  onChange={setSacDiveTime} />
+          <DrumRollPicker label={t('calc_sac_dive_time')} items={diveTimeItems} value={sacDiveTime} onChange={setSacDiveTime} />
         </View>
       </View>
       {sacResult ? (
         <>
-          <ResultCard title={t('calc_sac_result')}       value={sacResult.sacRate.toFixed(1)}         unit="L/min" subtitle={`${sacAvgDepth}${depthLabel} ${t('gplan_avg_depth_suffix')}`} accent={theme.accent} />
+          <ResultCard title={t('calc_sac_result')}       value={sacResult.sacRate.toFixed(1)}          unit="L/min" subtitle={`${sacAvgDepth}${depthLabel} ${t('gplan_avg_depth_suffix')}`} accent={theme.accent} />
           <ResultCard title={t('calc_sac_gas_consumed')} value={sacResult.totalGasConsumed.toFixed(0)} unit="L"     subtitle={`${sacPressureUsed} ${pressureLabel} × ${sacTankVolume} L`}   accent={theme.accentSub} />
         </>
       ) : (
@@ -162,9 +166,9 @@ export default function GasPlanScreen() {
           <DrumRollPicker label={t('calc_endurance_reserve')}          items={endReserveItems}  value={endReserve}         onChange={setEndReserve} />
         </View>
         <View style={styles.pickerRow}>
-          <DrumRollPicker label={t('calc_sac_tank_volume')}   items={tankVolumeItems} value={endTankVolume} onChange={setEndTankVolume} />
+          <DrumRollPicker label={t('calc_sac_tank_volume')} items={cylVolumeItems} value={endTankVolume} onChange={setEndTankVolume} />
           <View style={[styles.divider, { backgroundColor: theme.border }]} />
-          <DrumRollPicker label={t('calc_endurance_depth')}   items={depthItems}      value={endDepth}      onChange={setEndDepth} />
+          <DrumRollPicker label={t('calc_endurance_depth')} items={depthItems}     value={endDepth}      onChange={setEndDepth} />
         </View>
         <View style={styles.pickerRow}>
           <DrumRollPicker label="SAC Rate" items={sacRateItems} value={endSacRate} onChange={setEndSacRate} />
@@ -192,107 +196,78 @@ export default function GasPlanScreen() {
         <Text style={[styles.emptyHint, { color: theme.textMuted }]}>{t('calc_check_input')}</Text>
       )}
 
-      {/* ── 탱크 계획 ── */}
-      <SectionHeader title={t('gplan_tanks')} subtitle={t('gplan_tanks_subtitle')} />
+      {/* ── 실린더 계획 ── */}
+      <SectionHeader title={t('gplan_cylinders')} subtitle={t('gplan_cylinders_subtitle')} />
 
-      {/* 공통 조건 */}
-      <View style={[styles.card, { backgroundColor: theme.surface }]}>
-        <Text style={[styles.condLabel, { color: theme.textSecondary }]}>{t('gplan_conditions')}</Text>
-        <View style={styles.pickerRow}>
-          <DrumRollPicker label={t('gplan_depth')} items={depthItems} value={planDepth} onChange={setPlanDepth} />
-          <View style={[styles.divider, { backgroundColor: theme.border }]} />
-          <DrumRollPicker label="SAC Rate (L/min)" items={sacRateItems} value={planSacRate} onChange={setPlanSacRate} />
-        </View>
-      </View>
-
-      {/* 탱크 목록 */}
-      {tanks.map((tank, idx) => {
-        const res  = tankResults[idx];
-        const fN2  = Math.max(0, 1 - tank.fO2 - tank.fHe);
+      {cylinders.map((cyl, idx) => {
+        const res     = cylResults[idx];
+        const fN2     = Math.max(0, 1 - cyl.fO2 - cyl.fHe);
         const mixLabel =
-          tank.fHe > 0           ? `Trimix ${(tank.fO2*100).toFixed(0)}/${(tank.fHe*100).toFixed(0)}`
-          : tank.fO2 > 0.2101    ? `EAN ${(tank.fO2*100).toFixed(0)}`
-          : tank.fO2 < 0.2099    ? `Hypoxic ${(tank.fO2*100).toFixed(0)}`
+          cyl.fHe > 0        ? `Trimix ${(cyl.fO2*100).toFixed(0)}/${(cyl.fHe*100).toFixed(0)}`
+          : cyl.fO2 > 0.2101 ? `EAN ${(cyl.fO2*100).toFixed(0)}`
+          : cyl.fO2 < 0.2099 ? `Hypoxic ${(cyl.fO2*100).toFixed(0)}`
           : 'Air';
 
         return (
-          <View key={tank.id} style={[styles.tankCard, { backgroundColor: theme.surface }]}>
+          <View key={cyl.id} style={[styles.cylCard, { backgroundColor: theme.surface }]}>
             {/* 헤더 */}
-            <View style={styles.tankHeader}>
-              <View style={styles.tankTitleRow}>
-                <Text style={[styles.tankTitle, { color: theme.text }]}>
-                  {t('gplan_tank_label')} {idx + 1}
+            <View style={styles.cylHeader}>
+              <View style={styles.cylTitleRow}>
+                <Text style={[styles.cylTitle, { color: theme.text }]}>
+                  {t('gplan_cylinder_label')} {idx + 1}
                 </Text>
                 <View style={[styles.mixBadge, { backgroundColor: theme.infoBg }]}>
                   <Text style={[styles.mixBadgeText, { color: theme.accent }]}>{mixLabel}</Text>
                 </View>
               </View>
-              <TouchableOpacity onPress={() => removeTank(tank.id)}>
+              <TouchableOpacity onPress={() => removeCylinder(cyl.id)}>
                 <Text style={[styles.removeBtn, { color: theme.textMuted }]}>✕</Text>
               </TouchableOpacity>
             </View>
 
             {/* 가스 조성 */}
-            <GasSlider
-              label="O₂ %"
-              value={tank.fO2}
-              onChange={(v) => updateTank(tank.id, { fO2: v })}
-              min={0.04}
-              max={Math.max(0.04, 1 - tank.fHe)}
-              step={0.01}
-            />
-            <GasSlider
-              label="He %"
-              value={tank.fHe}
-              onChange={(v) => updateTank(tank.id, { fHe: v })}
-              min={0}
-              max={Math.max(0, 1 - tank.fO2)}
-              step={0.01}
-            />
+            <GasSlider label="O₂ %" value={cyl.fO2} onChange={(v) => updateCylinder(cyl.id, { fO2: v })} min={0.04} max={Math.max(0.04, 1 - cyl.fHe)} step={0.01} />
+            <GasSlider label="He %" value={cyl.fHe} onChange={(v) => updateCylinder(cyl.id, { fHe: v })} min={0}    max={Math.max(0, 1 - cyl.fO2)}     step={0.01} />
             <View style={[styles.n2Row, { borderTopColor: theme.surfaceAlt }]}>
               <Text style={[styles.n2Label, { color: theme.textMuted }]}>N₂ {(fN2*100).toFixed(0)}%</Text>
             </View>
 
-            {/* 탱크 파라미터 */}
+            {/* 실린더 파라미터 */}
             <View style={styles.pickerRow}>
-              <DrumRollPicker
-                label={t('gplan_volume')}
-                items={tankVolumeItems}
-                value={tank.volume}
-                onChange={(v) => updateTank(tank.id, { volume: v })}
-              />
+              <DrumRollPicker label={t('gplan_volume')} items={cylVolumeItems} value={cyl.volume}   onChange={(v) => updateCylinder(cyl.id, { volume: v })} />
               <View style={[styles.divider, { backgroundColor: theme.border }]} />
-              <DrumRollPicker
-                label={`${t('gplan_start_pressure')} (${pressureLabel})`}
-                items={tankPressureItems}
-                value={tank.pressure}
-                onChange={(v) => updateTank(tank.id, { pressure: v })}
-              />
+              <DrumRollPicker label={`${t('gplan_start_pressure')} (${pressureLabel})`} items={cylPressureItems} value={cyl.pressure} onChange={(v) => updateCylinder(cyl.id, { pressure: v })} />
               <View style={[styles.divider, { backgroundColor: theme.border }]} />
-              <DrumRollPicker
-                label={`${t('gplan_reserve')} (${pressureLabel})`}
-                items={tankReserveItems}
-                value={tank.reserve}
-                onChange={(v) => updateTank(tank.id, { reserve: v })}
-              />
+              <DrumRollPicker label={`${t('gplan_reserve')} (${pressureLabel})`}        items={cylReserveItems}  value={cyl.reserve}  onChange={(v) => updateCylinder(cyl.id, { reserve: v })} />
+            </View>
+
+            {/* 계획 수심 · SAC */}
+            <View style={[styles.planRow, { borderTopColor: theme.surfaceAlt }]}>
+              <View style={styles.planPickerWrap}>
+                <DrumRollPicker label={t('gplan_depth')} items={depthItems}    value={cyl.planDepth}   onChange={(v) => updateCylinder(cyl.id, { planDepth: v })} />
+              </View>
+              <View style={[styles.divider, { backgroundColor: theme.border }]} />
+              <View style={styles.planPickerWrap}>
+                <DrumRollPicker label="SAC (L/min)" items={sacRateItems} value={cyl.planSacRate} onChange={(v) => updateCylinder(cyl.id, { planSacRate: v })} />
+              </View>
             </View>
 
             {/* 계산 결과 */}
             {res && (
-              <View style={[styles.tankResult, { backgroundColor: theme.surfaceAlt }]}>
-                <View style={styles.tankResultItem}>
-                  <Text style={[styles.tankResultValue, { color: res.usableGasL > 0 ? theme.accent : theme.errorText }]}>
+              <View style={[styles.cylResult, { backgroundColor: theme.surfaceAlt }]}>
+                <View style={styles.cylResultItem}>
+                  <Text style={[styles.cylResultValue, { color: res.usableGasL > 0 ? theme.accent : theme.errorText }]}>
                     {res.usableGasL > 0 ? res.usableGasL.toFixed(0) : '0'} L
                   </Text>
-                  <Text style={[styles.tankResultLabel, { color: theme.textMuted }]}>{t('gplan_usable_gas')}</Text>
+                  <Text style={[styles.cylResultLabel, { color: theme.textMuted }]}>{t('gplan_usable_gas')}</Text>
                 </View>
-                <View style={[styles.tankResultDivider, { backgroundColor: theme.border }]} />
-                <View style={styles.tankResultItem}>
-                  <Text style={[styles.tankResultValue, { color: res.enduranceMin > 0 ? '#008844' : theme.errorText }]}>
+                <View style={[styles.cylResultDivider, { backgroundColor: theme.border }]} />
+                <View style={styles.cylResultItem}>
+                  <Text style={[styles.cylResultValue, { color: res.enduranceMin > 0 ? '#008844' : theme.errorText }]}>
                     {res.enduranceMin > 0 ? res.enduranceMin.toFixed(1) : '0'} min
                   </Text>
-                  <Text style={[styles.tankResultLabel, { color: theme.textMuted }]}>
-                    {t('gplan_time')} @ {planDepth}{depthLabel}
+                  <Text style={[styles.cylResultLabel, { color: theme.textMuted }]}>
+                    {t('gplan_time')} @ {cyl.planDepth}{depthLabel}
                   </Text>
                 </View>
               </View>
@@ -304,8 +279,8 @@ export default function GasPlanScreen() {
         );
       })}
 
-      <TouchableOpacity style={[styles.addBtn, { borderColor: theme.accent }]} onPress={addTank}>
-        <Text style={[styles.addBtnText, { color: theme.accent }]}>{t('gplan_add_tank')}</Text>
+      <TouchableOpacity style={[styles.addBtn, { borderColor: theme.accent }]} onPress={addCylinder}>
+        <Text style={[styles.addBtnText, { color: theme.accent }]}>{t('gplan_add_cylinder')}</Text>
       </TouchableOpacity>
 
       <View style={{ height: 40 }} />
@@ -323,26 +298,30 @@ const styles = StyleSheet.create({
   pickerRow: { flexDirection: 'row', alignItems: 'flex-start', paddingHorizontal: 2 },
   divider: { width: 1, alignSelf: 'stretch', marginHorizontal: 2, marginTop: 18, backgroundColor: 'transparent' },
   emptyHint: { fontSize: 13, textAlign: 'center', marginVertical: 8 },
-  condLabel: { fontSize: 12, fontWeight: '700', paddingHorizontal: 8, marginBottom: 2 },
-  tankCard: {
+  cylCard: {
     borderRadius: 12, paddingTop: 12, paddingHorizontal: 16, paddingBottom: 12,
     marginBottom: 8, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 6, elevation: 2,
   },
-  tankHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  tankTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  tankTitle: { fontSize: 15, fontWeight: '700' },
+  cylHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  cylTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  cylTitle: { fontSize: 15, fontWeight: '700' },
   mixBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
   mixBadgeText: { fontSize: 11, fontWeight: '600' },
   removeBtn: { fontSize: 16, paddingHorizontal: 4 },
   n2Row: { flexDirection: 'row', justifyContent: 'center', paddingTop: 6, borderTopWidth: 1, marginBottom: 10 },
   n2Label: { fontSize: 12 },
-  tankResult: {
+  planRow: {
+    flexDirection: 'row', alignItems: 'flex-start',
+    borderTopWidth: 1, marginTop: 4, paddingTop: 2, paddingHorizontal: 2,
+  },
+  planPickerWrap: { flex: 1 },
+  cylResult: {
     flexDirection: 'row', borderRadius: 8, paddingVertical: 12, paddingHorizontal: 8, marginTop: 10,
   },
-  tankResultItem: { flex: 1, alignItems: 'center' },
-  tankResultDivider: { width: 1, alignSelf: 'stretch', marginHorizontal: 8 },
-  tankResultValue: { fontSize: 20, fontWeight: '700' },
-  tankResultLabel: { fontSize: 11, marginTop: 2, textAlign: 'center' },
+  cylResultItem: { flex: 1, alignItems: 'center' },
+  cylResultDivider: { width: 1, alignSelf: 'stretch', marginHorizontal: 8 },
+  cylResultValue: { fontSize: 20, fontWeight: '700' },
+  cylResultLabel: { fontSize: 11, marginTop: 2, textAlign: 'center' },
   warnText: { fontSize: 12, marginTop: 6, textAlign: 'center' },
   addBtn: { borderWidth: 1.5, borderStyle: 'dashed', borderRadius: 10, paddingVertical: 12, alignItems: 'center', marginTop: 4 },
   addBtnText: { fontWeight: '600', fontSize: 14 },
