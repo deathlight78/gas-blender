@@ -15,10 +15,11 @@ export default function HomeScreen() {
   const { t } = useTranslation();
 
   const FEATURES = [
-    { title: 'OC Blending', subtitle: 'Nitrox / Trimix partial pressure', route: '/blending', color: theme.accent },
-    { title: 'CCR Blending', subtitle: 'Diluent + O₂ setpoint', route: '/blending', color: theme.accentSub },
-    { title: 'MOD / EAD / END', subtitle: 'Quick gas calculators', route: '/calculator', color: '#008844' },
-    { title: 'Deco Planning', subtitle: 'Bühlmann ZHL-16C + GF', route: '/deco', color: '#CC5500' },
+    { title: 'OC Blending',    subtitle: 'Nitrox / Trimix partial pressure', route: '/blending',  color: theme.accent },
+    { title: 'CCR Blending',   subtitle: 'Diluent + O₂ setpoint',            route: '/blending',  color: theme.accentSub },
+    { title: 'Gas Plan',       subtitle: 'SAC · 가스량 · 탱크 계획',          route: '/gas-plan',  color: '#008844' },
+    { title: 'Deco Planning',  subtitle: 'Bühlmann ZHL-16C + GF',            route: '/deco',      color: '#CC5500' },
+    { title: 'MOD / EAD / END', subtitle: 'Quick gas calculators',           route: '/calculator', color: '#7C3AED' },
   ];
 
   return (

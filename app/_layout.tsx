@@ -45,15 +45,6 @@ function TabNavigator() {
           }}
         />
         <Tabs.Screen
-          name="calculator"
-          options={{
-            title: t('tab_gas_info'),
-            tabBarIcon: ({ color, size }) => (
-              <Ionicons name="analytics-outline" size={size} color={color} />
-            ),
-          }}
-        />
-        <Tabs.Screen
           name="gas-plan"
           options={{
             title: t('tab_gas_plan'),
@@ -68,6 +59,15 @@ function TabNavigator() {
             title: t('tab_deco'),
             tabBarIcon: ({ color, size }) => (
               <Ionicons name="bar-chart-outline" size={size} color={color} />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="calculator"
+          options={{
+            title: t('tab_gas_info'),
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons name="analytics-outline" size={size} color={color} />
             ),
           }}
         />
