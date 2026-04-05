@@ -150,8 +150,12 @@ export default function GasPlanScreen() {
       </View>
       {sacResult ? (
         <>
-          <ResultCard title={t('calc_sac_result')}       value={sacResult.sacRate.toFixed(1)}          unit="L/min" subtitle={`${sacAvgDepth}${depthLabel} ${t('gplan_avg_depth_suffix')}`} accent={theme.accent} />
-          <ResultCard title={t('calc_sac_gas_consumed')} value={sacResult.totalGasConsumed.toFixed(0)} unit="L"     subtitle={`${sacPressureUsed} ${pressureLabel} × ${sacTankVolume} L`}   accent={theme.accentSub} />
+          <ResultCard title={t('calc_sac_result')} value={sacResult.sacRate.toFixed(1)} unit="L/min"
+            subtitle={`${sacAvgDepth}${depthLabel} ${t('gplan_avg_depth_suffix')}`} accent={theme.accent} />
+          <ResultCard title={t('calc_sac_rmv')} value={sacResult.rmv.toFixed(1)} unit="L/min"
+            subtitle={`SAC ${sacResult.sacRate.toFixed(1)} × ${sacResult.ambientPressure.toFixed(1)} bar`} accent={theme.accentSub} />
+          <ResultCard title={t('calc_sac_gas_consumed')} value={sacResult.totalGasConsumed.toFixed(0)} unit="L"
+            subtitle={`${sacPressureUsed} ${pressureLabel} × ${sacTankVolume} L`} accent="#7C3AED" />
         </>
       ) : (
         <Text style={[styles.emptyHint, { color: theme.textMuted }]}>{t('calc_check_input')}</Text>

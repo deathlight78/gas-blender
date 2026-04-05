@@ -53,6 +53,7 @@ export const ko = {
   calc_sac_avg_depth: '평균 수심',
   calc_sac_dive_time: '잠수 시간',
   calc_sac_result: 'SAC Rate',
+  calc_sac_rmv: 'RMV (해당 수심)',
   calc_sac_gas_consumed: '총 소비량',
   calc_endurance: '가스 사용 가능 시간',
   calc_endurance_subtitle: '현재 실린더로 계획 수심에서 사용 가능한 시간',

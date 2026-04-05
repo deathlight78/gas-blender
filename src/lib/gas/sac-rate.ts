@@ -36,7 +36,7 @@ export function calcSAC(input: SACInput): SACResult {
 
   return {
     sacRate,
-    rmv: sacRate,
+    rmv: sacRate * ambientPressure,  // 실제 해당 수심에서의 분당 호흡량
     ambientPressure,
     totalGasConsumed,
   };

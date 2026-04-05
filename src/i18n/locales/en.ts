@@ -53,6 +53,7 @@ export const en = {
   calc_sac_avg_depth: 'Avg Depth',
   calc_sac_dive_time: 'Dive Time',
   calc_sac_result: 'SAC Rate',
+  calc_sac_rmv: 'RMV (at depth)',
   calc_sac_gas_consumed: 'Total Gas Used',
   calc_endurance: 'Gas Endurance',
   calc_endurance_subtitle: 'Available dive time at planned depth',

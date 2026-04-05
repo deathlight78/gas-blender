@@ -14,7 +14,8 @@ describe('calcSAC', () => {
     expect(result.totalGasConsumed).toBeCloseTo(1200, 1);
     expect(result.ambientPressure).toBeCloseTo(3, 5);
     expect(result.sacRate).toBeCloseTo(8.889, 2);
-    expect(result.rmv).toBeCloseTo(result.sacRate, 5);
+    // RMV = SAC × ATA = 8.889 × 3 = 26.667 L/min (해당 수심 실제 호흡량)
+    expect(result.rmv).toBeCloseTo(result.sacRate * result.ambientPressure, 2);
   });
 
   test('해수면(0m) 수심 — ambientPressure = 1 bar', () => {
