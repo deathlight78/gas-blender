@@ -34,11 +34,12 @@ export function calcOCBlend(input: OCBlendInput): OCBlendResult {
   // 나머지는 Air로 채움
   const addTopPressure = targetPressure - currentPressure - addHePressure - addO2Pressure;
 
-  if (addTopPressure < -0.1) {
+  const isValid = addTopPressure >= -0.1;
+  if (!isValid) {
     warnings.push('blend_err_negative_topup');
   }
 
-  // 최종 혼합비 검증
+  // 최종 혼합비 검증 (isValid일 때만 의미 있음)
   const totalO2 = currentO2 + addO2Pressure + AIR_O2 * Math.max(0, addTopPressure);
   const totalHe = currentHe + addHePressure;
   const resultFO2 = totalO2 / targetPressure;
@@ -55,5 +56,6 @@ export function calcOCBlend(input: OCBlendInput): OCBlendResult {
       fN2: 1 - resultFO2 - resultFHe,
     },
     warnings,
+    isValid,
   };
 }

@@ -40,6 +40,17 @@ export default function BlendResult({ result, pressureUnit }: BlendResultProps) 
     addTopPressure: result.addTopPressure,
   };
 
+  // 결과가 유효하지 않으면 경고만 표시
+  if (!result.isValid) {
+    return (
+      <View style={[styles.warningBox, { backgroundColor: theme.warningBg }]}>
+        {result.warnings.map((w, i) => (
+          <Text key={i} style={[styles.warningText, { color: theme.warningText }]}>⚠ {t(w as any)}</Text>
+        ))}
+      </View>
+    );
+  }
+
   return (
     <View>
       <View style={[styles.stepsCard, { backgroundColor: theme.surface }]}>

@@ -28,6 +28,8 @@ export interface OCBlendResult {
   resultMix: GasMix;
   /** 경고 메시지 목록 */
   warnings: string[];
+  /** 결과가 물리적으로 유효한지 (false면 단계별 수치를 신뢰할 수 없음) */
+  isValid: boolean;
 }
 
 /** CCR 블렌딩 입력 */
