@@ -11,8 +11,14 @@ export function useTranslation() {
   const lang = useAppStore((s) => s.language);
   const dict = locales[lang] ?? locales.ko;
 
-  function t(key: TranslationKey): string {
-    return dict[key] ?? ko[key] ?? key;
+  function t(key: TranslationKey, params?: Record<string, string>): string {
+    let str: string = dict[key] ?? ko[key] ?? key;
+    if (params) {
+      Object.entries(params).forEach(([k, v]) => {
+        str = str.replace(`{${k}}`, v);
+      });
+    }
+    return str;
   }
 
   return { t, lang };

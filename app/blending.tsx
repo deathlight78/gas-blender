@@ -15,6 +15,23 @@ import { useTranslation } from '../src/i18n';
 
 type Tab = 'oc' | 'ccr';
 
+function translateCCRWarning(w: string, t: (k: any, p?: Record<string, string>) => string): string {
+  const [key, ...params] = w.split('|');
+  switch (key) {
+    case 'blend_err_setpoint_high':
+    case 'blend_err_setpoint_low':
+      return t(key);
+    case 'blend_err_diluent_hypoxic':
+      return t(key, { val: params[0] });
+    case 'blend_err_setpoint_exceeded_at_depth':
+      return t(key, { depth: params[0], ppo2: params[1], sp: params[2] });
+    case 'blend_err_depth_exceeds_mod':
+      return t(key, { depth: params[0], mod: params[1] });
+    default:
+      return w;
+  }
+}
+
 interface TankValues { pressure: string; fO2: number; fHe: number }
 interface CCRValues { dilFO2: number; dilFHe: number; setpoint: string; maxDepth: string }
 
@@ -106,7 +123,7 @@ export default function BlendingScreen() {
             />
             <SectionHeader title={t('blend_setpoint')} />
             <View style={[styles.card, { backgroundColor: theme.surface }]}>
-              <NumericInput label="ppO₂ Setpoint" value={ccr.setpoint} onChangeText={(v) => setCcr((c) => ({ ...c, setpoint: v }))} unit="bar" hint={t('blend_setpoint_hint')} />
+              <NumericInput label={t('blend_setpoint_label')} value={ccr.setpoint} onChangeText={(v) => setCcr((c) => ({ ...c, setpoint: v }))} unit="bar" hint={t('blend_setpoint_hint')} />
               <NumericInput label={t('blend_max_depth')} value={ccr.maxDepth} onChangeText={(v) => setCcr((c) => ({ ...c, maxDepth: v }))} unit="m" />
             </View>
             <TouchableOpacity style={[styles.calcBtn, { backgroundColor: theme.buttonPrimary }]} onPress={calcCCR}>
@@ -115,18 +132,18 @@ export default function BlendingScreen() {
             {ccrResult && (
               <>
                 <SectionHeader title={t('blend_result')} />
-                <ResultCard title={t('blend_max_setpoint_depth')} value={ccrResult.maxSetpointDepth.toFixed(1)} unit="m" subtitle="Diluent fO₂ 기준" accent="#CC5500" />
+                <ResultCard title={t('blend_max_setpoint_depth')} value={ccrResult.maxSetpointDepth.toFixed(1)} unit="m" subtitle={t('blend_diluent_fo2_basis')} accent="#CC5500" />
                 <ResultCard
                   title={t('blend_actual_ppo2')}
                   value={ccrResult.actualPpO2AtDepth.toFixed(3)}
                   unit="bar"
                   subtitle={`${ccr.maxDepth}m Diluent ppO₂`}
                   accent={theme.accent}
-                  warning={ccrResult.actualPpO2AtDepth > parseFloat(ccr.setpoint) * 1.05 ? 'ppO₂ setpoint 초과' : undefined}
+                  warning={ccrResult.actualPpO2AtDepth > parseFloat(ccr.setpoint) * 1.05 ? t('blend_warn_setpoint_exceeded') : undefined}
                 />
                 {ccrResult.warnings.length > 0 && (
                   <View style={[styles.warningBox, { backgroundColor: theme.warningBg }]}>
-                    {ccrResult.warnings.map((w, i) => <Text key={i} style={[styles.warningText, { color: theme.warningText }]}>⚠ {w}</Text>)}
+                    {ccrResult.warnings.map((w, i) => <Text key={i} style={[styles.warningText, { color: theme.warningText }]}>⚠ {translateCCRWarning(w, t)}</Text>)}
                   </View>
                 )}
               </>

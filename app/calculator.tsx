@@ -125,7 +125,7 @@ export default function CalculatorScreen() {
           <ResultCard title={t('calc_mod_deco')} value={displayDepth(results.modDeco)} unit={depthLabel} subtitle={`ppO₂ ${ppO2Deco} bar`} accent={theme.accentSub} />
         </>
       ) : (
-        <Text style={[styles.emptyHint, { color: theme.textMuted }]}>O₂ 비율을 입력하세요</Text>
+        <Text style={[styles.emptyHint, { color: theme.textMuted }]}>{t('calc_enter_o2')}</Text>
       )}
 
       <SectionHeader title={t('calc_best_mix')} subtitle={t('calc_best_mix_subtitle')} />
@@ -146,7 +146,7 @@ export default function CalculatorScreen() {
           accent="#7C3AED"
           warning={results.eadVal < 0 ? t('calc_ead_negative') : undefined}
         />
-      ) : <Text style={[styles.emptyHint, { color: theme.textMuted }]}>기체 설정을 입력하세요</Text>}
+      ) : <Text style={[styles.emptyHint, { color: theme.textMuted }]}>{t('calc_enter_gas')}</Text>}
 
       <SectionHeader title={t('calc_end')} />
       {results ? (
@@ -157,7 +157,7 @@ export default function CalculatorScreen() {
             <Text style={[styles.infoText, { color: theme.successText }]}>{t('calc_end_none')}</Text>
           </View>
         )
-      ) : <Text style={[styles.emptyHint, { color: theme.textMuted }]}>기체 설정을 입력하세요</Text>}
+      ) : <Text style={[styles.emptyHint, { color: theme.textMuted }]}>{t('calc_enter_gas')}</Text>}
 
       <SectionHeader title={t('calc_sac')} subtitle={t('calc_sac_subtitle')} />
       <View style={[styles.card, { backgroundColor: theme.surface }]}>
@@ -176,7 +176,7 @@ export default function CalculatorScreen() {
           <ResultCard title={t('calc_sac_gas_consumed')} value={sacResult.totalGasConsumed.toFixed(0)} unit="L" subtitle={`${sacPressureUsed} bar × ${sacTankVolume} L`} accent={theme.accentSub} />
         </>
       ) : (
-        <Text style={[styles.emptyHint, { color: theme.textMuted }]}>입력값을 확인하세요</Text>
+        <Text style={[styles.emptyHint, { color: theme.textMuted }]}>{t('calc_check_input')}</Text>
       )}
 
       <SectionHeader title={t('calc_endurance')} subtitle={t('calc_endurance_subtitle')} />
@@ -199,7 +199,7 @@ export default function CalculatorScreen() {
             unit="min"
             subtitle={`${endDepth}${depthLabel} / SAC ${endSacRate} L/min`}
             accent="#008844"
-            warning={enduranceResult.enduranceMin <= 0 ? '예비 압력 부족' : undefined}
+            warning={enduranceResult.enduranceMin <= 0 ? t('calc_err_reserve') : undefined}
           />
           <ResultCard
             title={t('calc_endurance_usable_gas')}
@@ -210,7 +210,7 @@ export default function CalculatorScreen() {
           />
         </>
       ) : (
-        <Text style={[styles.emptyHint, { color: theme.textMuted }]}>입력값을 확인하세요</Text>
+        <Text style={[styles.emptyHint, { color: theme.textMuted }]}>{t('calc_check_input')}</Text>
       )}
 
       <View style={{ height: 40 }} />

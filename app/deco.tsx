@@ -48,9 +48,9 @@ export default function DecoScreen() {
     const gfLo = (parseFloat(gfLoStr) || 30) / 100;
     const gfHi = (parseFloat(gfHiStr) || 85) / 100;
 
-    if (depthM <= 0) { Alert.alert(t('error'), '유효한 수심을 입력하세요.'); return; }
-    if (btMin <= 0) { Alert.alert(t('error'), '유효한 바닥 시간을 입력하세요.'); return; }
-    if (gfLo > gfHi) { Alert.alert(t('error'), 'GF Low는 GF High보다 낮아야 합니다.'); return; }
+    if (depthM <= 0) { Alert.alert(t('error'), t('deco_err_depth')); return; }
+    if (btMin <= 0) { Alert.alert(t('error'), t('deco_err_bottom_time')); return; }
+    if (gfLo > gfHi) { Alert.alert(t('error'), t('deco_err_gf')); return; }
 
     const bottomMix: GasMix = { fO2: bottomFO2, fHe: bottomFHe, fN2: Math.max(0, 1 - bottomFO2 - bottomFHe) };
     const descMin = depthM / descentRate;
@@ -69,7 +69,7 @@ export default function DecoScreen() {
       setResult(planDeco(input));
       setBottomRunTime(Math.ceil(descMin + btMin));
     } catch {
-      Alert.alert(t('error'), '입력값을 확인하세요.');
+      Alert.alert(t('error'), t('deco_err_input'));
     }
   }
 
@@ -135,21 +135,21 @@ export default function DecoScreen() {
 
       {result && (
         <>
-          <SectionHeader title={t('deco_result')} subtitle={`GF ${gfLoStr}/${gfHiStr} · 상승 ${ascentRate}m/min`} />
+          <SectionHeader title={t('deco_result')} subtitle={`GF ${gfLoStr}/${gfHiStr} · ${t('deco_ascent_label')} ${ascentRate}m/min`} />
           <DecoSummary result={result} />
           <SectionHeader title={t('deco_table')} />
           <DecoTable stops={result.stops} bottomRunTime={bottomRunTime} ascentRate={ascentRate} />
           {result.maxCns > 80 && (
             <View style={[styles.warningBox, { backgroundColor: theme.warningBg }]}>
               <Text style={[styles.warningText, { color: theme.warningText }]}>
-                ⚠ CNS% {result.maxCns.toFixed(1)}% — 산소 독성 위험 수준
+                ⚠ CNS% {result.maxCns.toFixed(1)}% {t('deco_warn_cns_suffix')}
               </Text>
             </View>
           )}
           {result.maxOtu > 300 && (
             <View style={[styles.warningBox, { backgroundColor: theme.warningBg }]}>
               <Text style={[styles.warningText, { color: theme.warningText }]}>
-                ⚠ OTU {result.maxOtu.toFixed(0)} — 일일 한계(300 OTU) 초과
+                ⚠ OTU {result.maxOtu.toFixed(0)} {t('deco_warn_otu_suffix')}
               </Text>
             </View>
           )}

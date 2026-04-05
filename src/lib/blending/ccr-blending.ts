@@ -17,18 +17,16 @@ export function calcCCRBlend(input: CCRBlendInput): CCRBlendResult {
 
   // Setpoint 한계 검증
   if (setpoint > 1.6) {
-    warnings.push('Setpoint이 감압 한계(1.6 bar)를 초과합니다.');
+    warnings.push('blend_err_setpoint_high');
   }
   if (setpoint < MIN_PPO2) {
-    warnings.push('Setpoint이 최소 ppO₂(0.16 bar) 미만입니다.');
+    warnings.push('blend_err_setpoint_low');
   }
 
   // Diluent 해수면 O₂ 검증 — 저산소증 위험
   const ppO2Surface = diluentMix.fO2 * SURFACE_PRESSURE;
   if (ppO2Surface < MIN_PPO2) {
-    warnings.push(
-      `Diluent의 해수면 ppO₂(${ppO2Surface.toFixed(2)} bar)가 최소 한계(0.16 bar) 미만 — 저산소증 위험.`
-    );
+    warnings.push(`blend_err_diluent_hypoxic|${ppO2Surface.toFixed(2)}`);
   }
 
   // Setpoint 유지 가능 최대 수심
@@ -45,7 +43,7 @@ export function calcCCRBlend(input: CCRBlendInput): CCRBlendResult {
   // 목표 수심에서 ppO₂ 초과 검증
   if (actualPpO2AtDepth > setpoint * 1.05) {
     warnings.push(
-      `${maxDepth}m에서 Diluent ppO₂(${actualPpO2AtDepth.toFixed(2)} bar)가 setpoint(${setpoint} bar)를 초과합니다.`
+      `blend_err_setpoint_exceeded_at_depth|${maxDepth}|${actualPpO2AtDepth.toFixed(2)}|${setpoint}`
     );
   }
 
@@ -53,9 +51,7 @@ export function calcCCRBlend(input: CCRBlendInput): CCRBlendResult {
   if (diluentMix.fO2 > 0) {
     const diluentMod = mod(diluentMix.fO2, 1.4);
     if (maxDepth > diluentMod) {
-      warnings.push(
-        `목표 수심(${maxDepth}m)이 Diluent MOD(${diluentMod.toFixed(0)}m)를 초과합니다.`
-      );
+      warnings.push(`blend_err_depth_exceeds_mod|${maxDepth}|${diluentMod.toFixed(0)}`);
     }
   }
 

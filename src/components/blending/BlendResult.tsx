@@ -22,16 +22,16 @@ export default function BlendResult({ result, pressureUnit }: BlendResultProps) 
     return (
       <View style={[styles.empty, { backgroundColor: theme.surfaceAlt }]}>
         <Text style={[styles.emptyText, { color: theme.textMuted }]}>
-          계산 결과가 여기에 표시됩니다
+          {t('blend_result_empty')}
         </Text>
       </View>
     );
   }
 
   const steps = [
-    { key: 'addHePressure' as const, label: '① He 주입', color: '#7C3AED', note: '헬륨 먼저 주입' },
-    { key: 'addO2Pressure' as const, label: '② O₂ 주입', color: theme.accent, note: '산소 다음 주입' },
-    { key: 'addTopPressure' as const, label: '③ Air 탑업', color: '#008844', note: '마지막으로 공기 채우기' },
+    { key: 'addHePressure' as const, label: t('blend_step_he'), color: '#7C3AED', note: t('blend_step_he_note') },
+    { key: 'addO2Pressure' as const, label: t('blend_step_o2'), color: theme.accent, note: t('blend_step_o2_note') },
+    { key: 'addTopPressure' as const, label: t('blend_step_air'), color: '#008844', note: t('blend_step_air_note') },
   ];
 
   const vals = {
@@ -43,7 +43,7 @@ export default function BlendResult({ result, pressureUnit }: BlendResultProps) 
   return (
     <View>
       <View style={[styles.stepsCard, { backgroundColor: theme.surface }]}>
-        <Text style={[styles.stepsTitle, { color: theme.textMuted }]}>주입 순서</Text>
+        <Text style={[styles.stepsTitle, { color: theme.textMuted }]}>{t('blend_step_order')}</Text>
         {steps.map((step) => {
           const val = vals[step.key];
           const isZero = val < 0.05;
@@ -57,7 +57,7 @@ export default function BlendResult({ result, pressureUnit }: BlendResultProps) 
                 <Text style={[styles.stepNote, { color: theme.textMuted }]}>{step.note}</Text>
               </View>
               <Text style={[styles.stepValue, { color: isZero ? theme.textMuted : theme.accent }]}>
-                {isZero ? '불필요' : toPressureDisplay(val, pressureUnit)}
+                {isZero ? t('blend_step_skip') : toPressureDisplay(val, pressureUnit)}
               </Text>
             </View>
           );
@@ -65,7 +65,7 @@ export default function BlendResult({ result, pressureUnit }: BlendResultProps) 
       </View>
 
       <View style={[styles.resultCard, { backgroundColor: theme.surface }]}>
-        <Text style={[styles.resultTitle, { color: theme.textMuted }]}>최종 혼합비 (검증)</Text>
+        <Text style={[styles.resultTitle, { color: theme.textMuted }]}>{t('blend_result_mix_verify')}</Text>
         <View style={styles.gasRow}>
           {[
             { label: 'O₂', value: result.resultMix.fO2, color: theme.accent },

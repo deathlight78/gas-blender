@@ -37,7 +37,7 @@ describe('CCR Blending', () => {
       setpoint: 1.7,
       maxDepth: 40,
     });
-    expect(result.warnings.some((w) => w.includes('1.6'))).toBe(true);
+    expect(result.warnings.some((w) => w.includes('blend_err_setpoint_high'))).toBe(true);
   });
 
   test('Trimix diluent 목표 수심 ppO2 검증', () => {

@@ -3,6 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import DrumRollPicker from '../ui/DrumRollPicker';
 import SectionHeader from '../ui/SectionHeader';
 import { useAppTheme } from '../../context/ThemeContext';
+import { useTranslation } from '../../i18n';
 import { PressureUnit } from '../../types/gas.types';
 
 interface TankValues {
@@ -32,6 +33,7 @@ const HE_ITEMS = buildRange(0, 96);
 
 export default function TankForm({ title, values, onChange, pressureUnit, errors = {} }: TankFormProps) {
   const theme = useAppTheme();
+  const { t } = useTranslation();
   const fN2 = Math.max(0, 1 - values.fO2 - values.fHe);
   const mixLabel =
     values.fHe > 0
@@ -89,7 +91,7 @@ export default function TankForm({ title, values, onChange, pressureUnit, errors
 
           {/* O2 % 컬럼 */}
           <DrumRollPicker
-            label="Oxygen %"
+            label={t('blend_oxygen_pct')}
             items={O2_ITEMS}
             value={o2Pct}
             onChange={onO2Change}
@@ -98,7 +100,7 @@ export default function TankForm({ title, values, onChange, pressureUnit, errors
 
           {/* He % 컬럼 */}
           <DrumRollPicker
-            label="Helium %"
+            label={t('blend_helium_pct')}
             items={HE_ITEMS}
             value={hePct}
             onChange={onHeChange}

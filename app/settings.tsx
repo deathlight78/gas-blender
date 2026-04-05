@@ -68,22 +68,22 @@ export default function SettingsScreen() {
     const asc = parseFloat(ascentRate);
     const desc = parseFloat(descentRate);
 
-    if (isNaN(w) || w < 0.16 || w > 2.0) { Alert.alert(t('error'), 'ppO₂ 작업 한계는 0.16~2.0 범위여야 합니다.'); return; }
-    if (isNaN(d) || d < 0.16 || d > 2.0) { Alert.alert(t('error'), 'ppO₂ 감압 한계는 0.16~2.0 범위여야 합니다.'); return; }
-    if (w > d) { Alert.alert(t('error'), 'ppO₂ 작업 한계는 감압 한계보다 낮아야 합니다.'); return; }
-    if (isNaN(asc) || asc <= 0) { Alert.alert(t('error'), '상승 속도는 양수여야 합니다.'); return; }
-    if (isNaN(desc) || desc <= 0) { Alert.alert(t('error'), '하강 속도는 양수여야 합니다.'); return; }
+    if (isNaN(w) || w < 0.16 || w > 2.0) { Alert.alert(t('error'), t('settings_err_ppo2_work_range')); return; }
+    if (isNaN(d) || d < 0.16 || d > 2.0) { Alert.alert(t('error'), t('settings_err_ppo2_deco_range')); return; }
+    if (w > d) { Alert.alert(t('error'), t('settings_err_ppo2_order')); return; }
+    if (isNaN(asc) || asc <= 0) { Alert.alert(t('error'), t('settings_err_ascent_rate')); return; }
+    if (isNaN(desc) || desc <= 0) { Alert.alert(t('error'), t('settings_err_descent_rate')); return; }
 
     store.setPpO2Work(w);
     store.setPpO2Deco(d);
     store.setGf(gfLow, gfHigh);
     store.setAscentRate(asc);
     store.setDescentRate(desc);
-    Alert.alert(t('confirm'), t('save') + ' 완료');
+    Alert.alert(t('confirm'), t('settings_save_done'));
   }
 
   function reset() {
-    Alert.alert(t('reset'), '모든 설정을 기본값으로 되돌리겠습니까?', [
+    Alert.alert(t('reset'), t('settings_reset_confirm'), [
       { text: t('cancel'), style: 'cancel' },
       {
         text: t('reset'),
@@ -111,8 +111,8 @@ export default function SettingsScreen() {
       <View style={[styles.card, { backgroundColor: theme.surface }]}>
         <NumericInput label={t('settings_ppo2_work')} value={ppO2Work} onChangeText={setPpO2Work} unit="bar" hint={t('settings_ppo2_work_hint')} />
         <NumericInput label={t('settings_ppo2_deco')} value={ppO2Deco} onChangeText={setPpO2Deco} unit="bar" hint={t('settings_ppo2_deco_hint')} />
-        {parseFloat(ppO2Work) > 1.4 && <Text style={[styles.cautionText, { color: theme.warningText }]}>⚠ 작업 한계 1.4 bar 초과</Text>}
-        {parseFloat(ppO2Deco) > 1.6 && <Text style={[styles.cautionText, { color: theme.warningText }]}>⚠ 감압 한계 1.6 bar 초과</Text>}
+        {parseFloat(ppO2Work) > 1.4 && <Text style={[styles.cautionText, { color: theme.warningText }]}>{t('settings_warn_ppo2_work')}</Text>}
+        {parseFloat(ppO2Deco) > 1.6 && <Text style={[styles.cautionText, { color: theme.warningText }]}>{t('settings_warn_ppo2_deco')}</Text>}
       </View>
 
       <SectionHeader title={t('settings_gf')} subtitle={t('settings_gf_subtitle')} />
@@ -120,7 +120,7 @@ export default function SettingsScreen() {
         <GasSlider label={`GF Low: ${(gfLow * 100).toFixed(0)}%`} value={gfLow} onChange={(v) => setGfLow(Math.min(v, gfHigh))} min={0.1} max={gfHigh} step={0.05} />
         <GasSlider label={`GF High: ${(gfHigh * 100).toFixed(0)}%`} value={gfHigh} onChange={(v) => setGfHigh(Math.max(v, gfLow))} min={gfLow} max={1.0} step={0.05} />
         <Text style={[styles.gfHint, { color: theme.textMuted }]}>
-          GF {(gfLow * 100).toFixed(0)}/{(gfHigh * 100).toFixed(0)} — {gfLow <= 0.3 && gfHigh >= 0.8 ? '보수적' : gfLow >= 0.7 ? '공격적' : '중간'}
+          GF {(gfLow * 100).toFixed(0)}/{(gfHigh * 100).toFixed(0)} — {gfLow <= 0.3 && gfHigh >= 0.8 ? t('settings_gf_conservative') : gfLow >= 0.7 ? t('settings_gf_aggressive') : t('settings_gf_moderate')}
         </Text>
       </View>
 
@@ -131,7 +131,7 @@ export default function SettingsScreen() {
           options={['m', 'ft']}
           value={store.depthUnit}
           onChange={store.setDepthUnit}
-          labels={{ m: '미터 (m)', ft: '피트 (ft)' }}
+          labels={{ m: t('settings_depth_m'), ft: t('settings_depth_ft') }}
         />
         <Text style={[styles.toggleLabel, { color: theme.textSecondary, marginTop: 16 }]}>{t('settings_pressure')}</Text>
         <ToggleGroup<PressureUnit>
