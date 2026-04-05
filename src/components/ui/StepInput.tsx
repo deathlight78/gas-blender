@@ -139,7 +139,7 @@ export default function StepInput({
 const styles = StyleSheet.create({
   container: { marginBottom: 14 },
   label: { fontSize: 13, fontWeight: '600', marginBottom: 8 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
   stepBtn: { width: 36, height: 36, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
   stepBtnText: { fontSize: 20, lineHeight: 24 },
   input: {
