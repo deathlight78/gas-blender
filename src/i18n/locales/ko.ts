@@ -19,6 +19,16 @@ export const ko = {
 
   // 홈
   home_title: 'Gas Blender',
+  home_card_oc_title: 'OC 블렌딩',
+  home_card_oc_sub: 'Nitrox / Trimix 부분압 블렌딩',
+  home_card_ccr_title: 'CCR 블렌딩',
+  home_card_ccr_sub: 'Diluent + O₂ Setpoint',
+  home_card_gas_plan_title: '가스 계획',
+  home_card_gas_plan_sub: 'SAC · 가스량 · 실린더 계획',
+  home_card_deco_title: '감압 계획',
+  home_card_deco_sub: 'Bühlmann ZHL-16C + GF',
+  home_card_calc_title: '기체 분석',
+  home_card_calc_sub: 'MOD / EAD / END 빠른 계산',
   home_subtitle: 'Technical Diving Calculator',
   home_disclaimer: '⚠️ 계산 결과는 참고용입니다. 실제 다이빙은 자격을 갖춘 강사와 함께 계획하세요.',
 
@@ -120,6 +130,7 @@ export const ko = {
   deco_tts: 'TTS',
   deco_tts_sub: '분 (Time to Surface)',
   deco_total_deco: '총 감압',
+  deco_otu_units: 'units',
   deco_disclaimer: '⚠️ 계산 결과는 참고용입니다. 실제 다이빙은 자격을 갖춘 전문가와 함께 계획하세요.',
   deco_err_depth: '유효한 수심을 입력하세요.',
   deco_err_bottom_time: '유효한 바닥 시간을 입력하세요.',

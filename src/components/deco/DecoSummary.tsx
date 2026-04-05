@@ -36,7 +36,7 @@ export default function DecoSummary({ result }: DecoSummaryProps) {
     {
       label: 'OTU',
       value: result.maxOtu.toFixed(0),
-      sub: 'units',
+      sub: t('deco_otu_units'),
       color: result.maxOtu > 400 ? theme.errorText : result.maxOtu > 250 ? '#CC5500' : '#7C3AED',
       warn: result.maxOtu > 400,
     },
