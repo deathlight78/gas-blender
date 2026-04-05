@@ -68,6 +68,7 @@ export const ko = {
   blend_actual_ppo2: '목표 수심 ppO₂',
   blend_err_target_pressure: '목표 압력은 현재 압력보다 높아야 합니다.',
   blend_err_gas_sum: 'O₂ + He 합이 100%를 초과할 수 없습니다.',
+  blend_err_negative_topup: '공기 탑업 압력이 음수입니다. 탱크를 완전히 비운 후 다시 블렌딩하세요.',
 
   // 감압 계획
   deco_profile: '다이브 프로파일',

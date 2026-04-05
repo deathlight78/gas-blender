@@ -68,6 +68,7 @@ export const en = {
   blend_actual_ppo2: 'ppO₂ at Target Depth',
   blend_err_target_pressure: 'Target pressure must be greater than current pressure.',
   blend_err_gas_sum: 'O₂ + He cannot exceed 100%.',
+  blend_err_negative_topup: 'Negative top-up pressure. Drain the tank completely before blending.',
 
   // Deco Planning
   deco_profile: 'Dive Profile',

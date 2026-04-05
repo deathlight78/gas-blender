@@ -14,7 +14,7 @@ export function calcOCBlend(input: OCBlendInput): OCBlendResult {
   const warnings: string[] = [];
 
   if (targetPressure <= currentPressure) {
-    warnings.push('Target pressure must be greater than current pressure.');
+    warnings.push('blend_err_target_pressure');
   }
 
   // 현재 탱크 기체 절대량 (bar)
@@ -35,9 +35,7 @@ export function calcOCBlend(input: OCBlendInput): OCBlendResult {
   const addTopPressure = targetPressure - currentPressure - addHePressure - addO2Pressure;
 
   if (addTopPressure < -0.1) {
-    warnings.push(
-      'Calculation results in negative top-up pressure. Check mix ratios or consider a full drain.'
-    );
+    warnings.push('blend_err_negative_topup');
   }
 
   // 최종 혼합비 검증

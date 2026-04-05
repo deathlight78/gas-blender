@@ -2,6 +2,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { OCBlendResult } from '../../types/blending.types';
 import { PressureUnit } from '../../types/gas.types';
 import { useAppTheme } from '../../context/ThemeContext';
+import { useTranslation } from '../../i18n';
 
 interface BlendResultProps {
   result: OCBlendResult | null;
@@ -15,6 +16,7 @@ function toPressureDisplay(bar: number, unit: PressureUnit) {
 
 export default function BlendResult({ result, pressureUnit }: BlendResultProps) {
   const theme = useAppTheme();
+  const { t } = useTranslation();
 
   if (!result) {
     return (
@@ -83,7 +85,7 @@ export default function BlendResult({ result, pressureUnit }: BlendResultProps) 
       {result.warnings.length > 0 && (
         <View style={[styles.warningBox, { backgroundColor: theme.warningBg }]}>
           {result.warnings.map((w, i) => (
-            <Text key={i} style={[styles.warningText, { color: theme.warningText }]}>⚠ {w}</Text>
+            <Text key={i} style={[styles.warningText, { color: theme.warningText }]}>⚠ {t(w as any)}</Text>
           ))}
         </View>
       )}
