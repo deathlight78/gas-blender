@@ -20,23 +20,23 @@
 - `gas/partial-pressure.ts` — 부분압 / 절대압 변환
 - `gas/mod.ts` — MOD, Best Mix
 - `gas/ead-end.ts` — EAD, END
-- `gas/sac-rate.ts` — SAC Rate, Gas Endurance
+- `gas/sac-rate.ts` — SAC Rate, Gas Endurance, RMV
 - `blending/oc-blending.ts` — OC 부분압 블렌딩 (공기 탑업 O₂ 보정, isValid 플래그)
-- `blending/ccr-blending.ts` — CCR Diluent + setpoint 계산 (경고 i18n 키 인코딩)
+- `blending/ccr-blending.ts` — CCR Diluent + setpoint 계산 + CCR-1~5 (MOD / 저산소 한계 / pN₂ / Dual SP / O₂ 소비)
 - `deco/compartments.ts` — Bühlmann ZHL-16C 16 compartment 계수
 - `deco/buhlmann.ts` — Schreiner 방정식, 조직 포화도 업데이트, GF ceiling
 - `deco/gradient-factor.ts` — GF 보간 + 3m 정지 올림
 - `deco/oxygen-toxicity.ts` — CNS%/OTU (NOAA 표 + Repex 공식)
-- `deco/deco-planner.ts` — 감압 오케스트레이터 (multi-gas, CNS/OTU 누적)
+- `deco/deco-planner.ts` — 감압 오케스트레이터 (multi-gas, CNS/OTU 누적, lastStopDepth, ICD 경고, 기체별 소비량)
 - `utils/ranges.ts` — buildRange(min, max, step)
 
 ### 화면 (`app/`)
 - `index.tsx` — 홈 대시보드 (기능 카드, i18n)
-- `blending.tsx` — OC / CCR 블렌딩 (탭 전환)
-- `gas-plan.tsx` — SAC Rate · 가스 사용시간 · 실린더별 계획 (수심/SAC 개별 설정)
-- `deco.tsx` — 감압 계획 (StepInput + GasSlider)
-- `calculator.tsx` — MOD / Best Mix / EAD / END
-- `settings.tsx` — ppO₂ · GF · 단위 · 속도 · 언어 · 테마
+- `blending.tsx` — OC / CCR 블렌딩 (탭 전환, 헤더 ⓘ 인포 버튼, CCR-1~5 결과 카드)
+- `gas-plan.tsx` — SAC Rate · RMV · 가스 사용시간 · 실린더별 계획 (수심/SAC 개별 설정, 헤더 ⓘ 인포 버튼)
+- `deco.tsx` — 감압 계획 (StepInput + GasSlider, 마지막 정지 수심 설정, RMV 입력, ICD 경고 표시, 기체별 소비량 카드, 헤더 ⓘ 인포 버튼)
+- `calculator.tsx` — MOD / Best Mix / EAD / END (헤더 ⓘ 인포 버튼)
+- `settings.tsx` — ppO₂ · GF · 단위 · 속도 · 언어 · 테마 · 피드백 이메일 버튼
 
 ### UI 컴포넌트 (`src/components/`)
 - `ui/DrumRollPicker.tsx` — 드럼롤 피커 (PanResponder + 관성 스크롤, capture 핸들러)
@@ -45,6 +45,8 @@
 - `ui/ResultCard.tsx` — 계산 결과 카드
 - `ui/SectionHeader.tsx` — 섹션 헤더
 - `ui/NumericInput.tsx` — 단순 숫자 입력
+- `ui/InfoModal.tsx` — 탭별 알고리즘/공식 설명 모달 (헤더 ⓘ 버튼, useNavigation + useLayoutEffect)
+- `deco/HypoxicWarning` type — ppO₂ < 0.16 bar 저산소 경고 (deco.types.ts → deco-planner.ts → deco.tsx)
 - `ui/DisclaimerModal.tsx` — 첫 실행 면책 조항 모달
 - `blending/TankForm.tsx` — 블렌딩 실린더 폼 (DrumRollPicker)
 - `blending/BlendResult.tsx` — 블렌딩 결과 (isValid 기반 경고 분기)
@@ -60,6 +62,23 @@
 - `public/manifest.json` — PWA manifest
 - `vercel.json` — Vercel 배포 설정
 - `eas.json` — EAS Build (development/preview/production)
+
+### 참고 문서
+- `docs/GUE_DIFF.md` — GUE Decoplanner vs 현 프로젝트 기능 비교 및 로드맵
+
+---
+
+## 다음 구현 후보 (우선순위 순)
+
+| 순위 | 기능 | 난이도 | 핵심 변경 파일 |
+|---|---|---|---|
+| ✅ A | 최소 ppO₂ 경고 (< 0.16 bar) | 낮음 | `deco-planner.ts`, `deco.tsx` |
+| ✅ B | Bailout GF 설정 | 낮음 | `settings.store.ts`, `settings.tsx`, `deco.tsx` |
+| ✅ CCR-1~5 | CCR 블렌딩 5종 개선 | 낮음~중간 | `ccr-blending.ts`, `blending.types.ts`, `blending.tsx` |
+| C | ZHL-16B 계수 선택 | 낮음~중간 | `compartments.ts`, `settings.store.ts` |
+| D | 고도 보정 | 중간 | `deco-planner.ts` + `DecoInput` 전파 |
+
+세부 구현 현황은 `docs/GUE_DIFF.md` 참고.
 
 ---
 
@@ -96,3 +115,7 @@ npm install <패키지> --legacy-peer-deps
 | CCR 경고 i18n | `key\|param` 인코딩 후 UI에서 파싱 | 계산 라이브러리에 UI 의존성 불가 |
 | 기본 테마 | dark | 수중 환경 사용 시 눈부심 방지 |
 | 공기 조성 | 설정에서 정밀/계산용 선택 가능 | EAD·감압 계산 정밀도 사용자 선택 |
+| SAC vs RMV | SAC = 해수면 기준, RMV = SAC × ATA (수심 보정) | 두 값 모두 표시하여 계획 정확도 향상 |
+| 마지막 정지 수심 기본값 | 6m (GUE 표준) | 3m보다 보수적, 사용자 3m/6m/9m 선택 가능 |
+| ICD 경고 임계값 | fN₂ 차이 0.5% | 부동소수점 오차 방지, 실제 위험 기준 |
+| 헤더 ⓘ 버튼 주입 | `useNavigation + useLayoutEffect` | Expo Router tabs에서 화면별 headerRight 설정 표준 방식 |

@@ -1,6 +1,8 @@
-import { useState, useMemo, useRef, useCallback } from 'react';
-import { View, Text, ScrollView, StyleSheet } from 'react-native';
-import { useFocusEffect } from 'expo-router';
+import { useState, useMemo, useRef, useCallback, useLayoutEffect } from 'react';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import { useFocusEffect, useNavigation } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import InfoModal from '../src/components/ui/InfoModal';
 import GasSlider from '../src/components/ui/GasSlider';
 import DrumRollPicker from '../src/components/ui/DrumRollPicker';
 import ResultCard from '../src/components/ui/ResultCard';
@@ -23,11 +25,24 @@ export default function CalculatorScreen() {
   const scrollRef = useRef<ScrollView>(null);
   const { ppO2Work, ppO2Deco, depthUnit, airN2 } = useSettingsStore();
   const theme = useAppTheme();
+  const navigation = useNavigation();
 
   useFocusEffect(useCallback(() => {
     scrollRef.current?.scrollTo({ y: 0, animated: false });
   }, []));
   const { t } = useTranslation();
+
+  const [infoVisible, setInfoVisible] = useState(false);
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity onPress={() => setInfoVisible(true)} style={{ marginRight: 14 }}>
+          <Ionicons name="information-circle-outline" size={22} color={theme.headerText} />
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation, theme]);
 
   const [fO2, setFO2] = useState(0.21);
   const [fHe, setFHe] = useState(0);
@@ -70,6 +85,12 @@ export default function CalculatorScreen() {
       style={[styles.container, { backgroundColor: theme.background }]}
       contentContainerStyle={styles.content}
     >
+      <InfoModal
+        visible={infoVisible}
+        onClose={() => setInfoVisible(false)}
+        title={t('info_calculator_title')}
+        content={t('info_calculator_content')}
+      />
       <SectionHeader title={t('calc_gas_settings')} subtitle={t('calc_gas_subtitle')} />
       <View style={[styles.card, { backgroundColor: theme.surface }]}>
         <GasSlider label="O₂ %" value={fO2} onChange={setFO2} min={0.04} max={Math.max(0.04, 1 - fHe)} step={0.01} />

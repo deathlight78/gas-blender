@@ -41,8 +41,14 @@ export interface CCRBlendInput {
   o2Pressure: number;
   /** 목표 setpoint (ppO₂, bar) */
   setpoint: number;
+  /** CCR-4: 저수심 전환 setpoint (optional) */
+  setpoint2?: number;
   /** 계획 최대 수심 (m) */
   maxDepth: number;
+  /** CCR-5: 계획 다이빙 시간 (분) */
+  diveTimeMin?: number;
+  /** CCR-5: O₂ 실린더 수중용량 (L, 예: 2L 실린더) */
+  o2TankSizeL?: number;
 }
 
 /** CCR 블렌딩 결과 */
@@ -51,5 +57,17 @@ export interface CCRBlendResult {
   maxSetpointDepth: number;
   /** 해당 수심에서의 실제 ppO₂ */
   actualPpO2AtDepth: number;
+  /** CCR-1: Diluent MOD (ppO₂ 1.4 기준, m) */
+  diluentMod: number;
+  /** CCR-2: 저산소 한계 수심 (Diluent ppO₂ = 0.16 bar, m). 음수이면 해수면에서도 저산소 */
+  hypoxicLimitDepth: number;
+  /** CCR-3: 최대 수심에서의 Diluent pN₂ (bar) */
+  pN2AtDepth: number;
+  /** CCR-4: SP2 기준 전환 수심 (m). setpoint2 미입력 시 undefined */
+  sp2SwitchDepth?: number;
+  /** CCR-5: O₂ 소비량 (L). diveTimeMin 입력 시 계산 */
+  o2ConsumedL?: number;
+  /** CCR-5: O₂ 탱크 압력 강하 (bar). o2TankSizeL 입력 시 계산 */
+  o2PressureDrop?: number;
   warnings: string[];
 }

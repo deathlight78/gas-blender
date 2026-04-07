@@ -106,6 +106,26 @@ export const en = {
   blend_oxygen_pct: 'O₂ %',
   blend_helium_pct: 'He %',
 
+  // CCR blending additional results
+  blend_diluent_mod: 'Diluent MOD (ppO₂ 1.4)',
+  blend_diluent_mod_subtitle: 'Max operating depth at ppO₂ 1.4 bar',
+  blend_hypoxic_limit: 'Hypoxic Limit Depth',
+  blend_hypoxic_limit_subtitle: 'Depth where Diluent ppO₂ = 0.16 bar (negative = hypoxic at surface)',
+  blend_pn2_at_depth: 'pN₂ at Max Depth',
+  blend_pn2_at_depth_subtitle: 'Narcosis reference',
+  blend_setpoint2_label: 'SP2 (Ascent)',
+  blend_setpoint2_hint: 'Low setpoint for ascent (e.g. 0.70)',
+  blend_sp2_switch_depth: 'SP1→SP2 Switch Depth',
+  blend_sp2_switch_depth_subtitle: 'Switch to SP2 at or above this depth',
+  blend_o2_consumption: 'O₂ Consumption Estimate',
+  blend_o2_consumption_subtitle: 'CCR VO₂ = 0.5 L/min',
+  blend_dive_time: 'Planned Dive Time',
+  blend_o2_tank_size: 'O₂ Cylinder Water Volume',
+  blend_o2_consumed: 'Est. O₂ Consumed',
+  blend_o2_consumed_subtitle: '0.5 L/min × dive time',
+  blend_o2_pressure_drop: 'Est. Pressure Drop',
+  blend_o2_pressure_drop_subtitle: 'Consumed ÷ cylinder volume',
+
   // Deco Planning
   deco_profile: 'Dive Profile',
   deco_target_depth: 'Target Depth',
@@ -149,6 +169,11 @@ export const en = {
   deco_icd_warning: '⚠ ICD Warning',
   deco_icd_detail: '{depth}m switch: N₂ {prev}% → {next}% (reverse increase)',
   deco_icd_note: 'Reverse gas switch may cause Inert Composition Discrepancy (ICD).',
+  deco_hypoxic_warning: '⚠ Hypoxic Gas Warning',
+  deco_hypoxic_detail: '{gas} at {depth}m — ppO₂ {ppo2} bar (below 0.16 bar min)',
+  deco_hypoxic_note: 'Hypoxia risk at this depth. Adjust gas mix or switch depth.',
+  deco_bailout_mode: 'Bailout Mode',
+  deco_bailout_active: 'Bailout GF {lo}/{hi} active',
 
   // Settings
   settings_ppo2: 'ppO₂ Limits',
@@ -159,6 +184,9 @@ export const en = {
   settings_ppo2_deco_hint: 'Recommended: 1.6 bar (deco stop)',
   settings_gf: 'Gradient Factor',
   settings_gf_subtitle: 'Decompression conservatism',
+  settings_gf_bailout: 'Bailout GF',
+  settings_gf_bailout_subtitle: 'Gradient Factor for CCR bailout',
+  settings_gf_bailout_hint: 'GUE standard: GF 30/90',
   settings_units: 'Units',
   settings_depth: 'Depth',
   settings_pressure: 'Pressure',
@@ -206,6 +234,113 @@ export const en = {
   gplan_reserve: 'Reserve',
   gplan_usable_gas: 'Usable Gas',
   gplan_time: 'Est. Duration',
+
+  // Info modal
+  info_close: 'Close',
+
+  info_blending_title: 'Blending Formulas',
+  info_blending_content:
+    '[ OC Partial Pressure Blending ]\n\n' +
+    '▸ He fill pressure\n' +
+    '  ΔP_He = P_target×fHe_target − P_cur×fHe_cur\n\n' +
+    '▸ O₂ fill pressure\n' +
+    '  ΔP_O₂ = P_target×fO₂_target − P_cur×fO₂_cur\n\n' +
+    '▸ Air top-up (with O₂ correction)\n' +
+    '  ΔP_air = P_target − P_cur − ΔP_He − ΔP_O₂\n' +
+    '  ※ Corrects for O₂ fraction in air top-up\n\n' +
+    '▸ Fill order: He → O₂ → Air\n\n' +
+    '─────────────────────────\n' +
+    '[ CCR Diluent Basics ]\n\n' +
+    '▸ Diluent ppO₂ at depth\n' +
+    '  ppO₂ = fO₂_dil × ATA\n' +
+    '  ATA = 1 + depth / 10\n\n' +
+    '▸ Max setpoint depth\n' +
+    '  D_sp = (SP / fO₂_dil − 1) × 10  [m]\n\n' +
+    '─────────────────────────\n' +
+    '[ CCR-1: Diluent MOD ]\n\n' +
+    '  D_mod = (1.4 / fO₂_dil − 1) × 10  [m]\n' +
+    '  Max operating depth at ppO₂ = 1.4 bar\n\n' +
+    '─────────────────────────\n' +
+    '[ CCR-2: Hypoxic Limit Depth ]\n\n' +
+    '  D_hyp = (0.16 / fO₂_dil − 1) × 10  [m]\n' +
+    '  Depth where Diluent ppO₂ = 0.16 bar\n' +
+    '  O₂ flush required above this depth\n\n' +
+    '─────────────────────────\n' +
+    '[ CCR-3: pN₂ at Max Depth ]\n\n' +
+    '  pN₂ = fN₂_dil × ATA(maxDepth)  [bar]\n' +
+    '  Narcosis ref: pN₂ > 3.2 bar ≈ air at 40m\n\n' +
+    '─────────────────────────\n' +
+    '[ CCR-4: Dual Setpoint Switch Depth ]\n\n' +
+    '  SP1 = high setpoint (bottom, e.g. 1.3 bar)\n' +
+    '  SP2 = low setpoint (ascent, e.g. 0.7 bar)\n' +
+    '  SP1→SP2 switch depth:\n' +
+    '  D_sw = (SP2 / fO₂_dil − 1) × 10  [m]\n' +
+    '  Switch to SP2 at or above this depth\n\n' +
+    '─────────────────────────\n' +
+    '[ CCR-5: O₂ Consumption Estimate ]\n\n' +
+    '  VO₂ = 0.5 L/min (metabolic standard)\n' +
+    '  O₂_consumed = VO₂ × T  [L]\n' +
+    '  Pressure drop = O₂_consumed / tank_vol  [bar]',
+
+  info_calculator_title: 'Gas Info Formulas',
+  info_calculator_content:
+    '[ MOD (Maximum Operating Depth) ]\n\n' +
+    '  D_mod = (ppO₂_limit / fO₂ − 1) × 10  [m]\n\n' +
+    '─────────────────────────\n' +
+    '[ Best Mix ]\n\n' +
+    '  fO₂_best = ppO₂_work / ATA(depth)\n' +
+    '  ATA = 1 + depth / 10\n\n' +
+    '─────────────────────────\n' +
+    '[ EAD (Equivalent Air Depth) ]\n\n' +
+    '  D_ead = (fN₂ / fN₂_air × (D+10)) − 10  [m]\n' +
+    '  ※ fN₂_air = 0.79 or 0.781 (settings)\n\n' +
+    '─────────────────────────\n' +
+    '[ END (Equivalent Narcotic Depth) ]\n\n' +
+    '  D_end = (1 − fHe) × (D+10) − 10  [m]\n' +
+    '  ※ He assumed non-narcotic',
+
+  info_gasplan_title: 'Gas Plan Formulas',
+  info_gasplan_content:
+    '[ SAC Rate (Surface Air Consumption) ]\n\n' +
+    '  SAC = (P_used × V) / (ATA × T)  [L/min]\n' +
+    '  ATA = 1 + depth / 10\n\n' +
+    '─────────────────────────\n' +
+    '[ RMV (Respiratory Minute Volume) ]\n\n' +
+    '  RMV = SAC × ATA  [L/min]\n\n' +
+    '─────────────────────────\n' +
+    '[ Total Gas Consumed ]\n\n' +
+    '  gas_L = P × V  [L]\n\n' +
+    '─────────────────────────\n' +
+    '[ Gas Endurance ]\n\n' +
+    '  T = usable_gas / RMV  [min]\n' +
+    '  usable_gas = (P_cur − P_reserve) × V  [L]',
+
+  info_deco_title: 'Deco Algorithm',
+  info_deco_content:
+    '[ Bühlmann ZHL-16C ]\n\n' +
+    '  16 tissue compartments, t½ 4–635 min\n\n' +
+    '─────────────────────────\n' +
+    '[ Schreiner Equation (tissue loading) ]\n\n' +
+    '  P_t = P_alv + (P₀ − P_alv) × e^(−λ×t)\n' +
+    '  λ = ln2 / t½\n' +
+    '  P_alv = (P_amb − 0.0627) × fGas\n\n' +
+    '─────────────────────────\n' +
+    '[ GF Ceiling ]\n\n' +
+    '  M-value: P_limit = a + P_t / b\n' +
+    '  GF interpolation: gf = GFlow + (GFhigh−GFlow)\n' +
+    '                    × (depth−firstStop) / firstStop\n' +
+    '  Ceiling = (P_t − a×GF) / (GF/b − 1)\n\n' +
+    '─────────────────────────\n' +
+    '[ ICD (Isobaric Counter-Diffusion) ]\n\n' +
+    '  ΔfN₂ > 0.5% on gas switch → warning\n\n' +
+    '─────────────────────────\n' +
+    '[ CNS% (CNS O₂ Toxicity) ]\n\n' +
+    '  NOAA table limits per ppO₂\n' +
+    '  CNS% = Σ (Δt / limit(ppO₂)) × 100\n\n' +
+    '─────────────────────────\n' +
+    '[ OTU (Pulmonary O₂ Toxicity) ]\n\n' +
+    '  OTU/min = ((ppO₂ − 0.5) / 0.5)^0.83\n' +
+    '  (Repex formula, ppO₂ > 0.5 bar)',
 
   // Disclaimer
   disclaimer_title: '⚠️ Important Safety Notice',

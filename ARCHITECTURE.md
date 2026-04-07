@@ -49,14 +49,14 @@ gas-blender/
 │   │   │   ├── partial-pressure.ts
 │   │   │   ├── mod.ts            # MOD, Best Mix
 │   │   │   ├── ead-end.ts        # EAD, END
-│   │   │   └── sac-rate.ts       # SAC Rate, Gas Endurance
+│   │   │   └── sac-rate.ts       # SAC Rate, Gas Endurance, RMV
 │   │   ├── blending/
 │   │   │   ├── oc-blending.ts    # OC 부분압 블렌딩 (공기 탑업 O₂ 보정)
 │   │   │   └── ccr-blending.ts   # CCR Diluent + setpoint 계산
 │   │   ├── deco/
 │   │   │   ├── buhlmann.ts       # Bühlmann ZHL-16C (Schreiner 방정식)
 │   │   │   ├── compartments.ts   # 16 compartment 계수 (ZHL-16C)
-│   │   │   ├── deco-planner.ts   # 감압 오케스트레이터 (multi-gas, CNS/OTU)
+│   │   │   ├── deco-planner.ts   # 감압 오케스트레이터 (multi-gas, CNS/OTU, ICD, 기체별 소비량)
 │   │   │   ├── gradient-factor.ts # GF 보간 + 3m 정지 올림
 │   │   │   └── oxygen-toxicity.ts # CNS% / OTU (NOAA 표 + Repex 공식)
 │   │   └── utils/
@@ -69,6 +69,7 @@ gas-blender/
 │   │   │   ├── ResultCard.tsx    # 계산 결과 카드
 │   │   │   ├── SectionHeader.tsx # 섹션 제목 + 부제목
 │   │   │   ├── NumericInput.tsx  # 단순 숫자 텍스트 입력
+│   │   │   ├── InfoModal.tsx     # 탭별 알고리즘/공식 설명 모달 (헤더 ⓘ 버튼)
 │   │   │   └── DisclaimerModal.tsx # 첫 실행 면책 조항 모달
 │   │   ├── blending/
 │   │   │   ├── TankForm.tsx      # 블렌딩 실린더 입력 폼
@@ -89,16 +90,21 @@ gas-blender/
 │   └── types/
 │       ├── gas.types.ts          # GasMix, Tank, DepthUnit, PressureUnit
 │       ├── blending.types.ts     # OCBlendInput/Result, CCRBlendInput/Result
-│       └── deco.types.ts         # DecoInput, DecoResult, DecoStop, Segment
+│       └── deco.types.ts         # DecoInput, DecoResult, DecoStop, GasConsumption, IcdWarning
 ├── public/                       # PWA 에셋
 │   ├── manifest.json
 │   └── icon-*.png
 ├── assets/                       # 앱 아이콘·스플래시
 ├── __tests__/                    # 단위 테스트 (Jest)
+├── reference/
+│   └── decoplanner-offline.html  # GUE Decoplanner 참고용 오프라인 사본
+├── docs/
+│   └── GUE_DIFF.md               # GUE Decoplanner vs 현 프로젝트 기능 비교 및 로드맵
 ├── vercel.json                   # Vercel PWA 배포 설정
 ├── app.json                      # Expo 앱 설정 (bundleId, package 등)
 ├── eas.json                      # EAS Build 설정 (development/preview/production)
-└── ARCHITECTURE.md
+├── ARCHITECTURE.md
+└── CLAUDE.md
 ```
 
 ---
@@ -124,7 +130,7 @@ lib/ 순수 계산 함수 (useMemo로 실시간 계산)
 ### 부분압 블렌딩 (OC Top-up)
 ```
 P_He_add  = fHe_target × P_final − fHe_current × P_current
-P_O2_add  = fO2_target × P_final − fO2_current × P_current − 0.209 × P_air_base
+P_O2_add  = fO2_target × P_final − fO2_current × P_current − airO2 × P_air_base
 P_air_add = P_final − P_current − P_He_add − P_O2_add
 ```
 
@@ -135,13 +141,14 @@ MOD (m) = (ppO2_limit / fO2 − 1) × 10
 
 ### EAD / END
 ```
-EAD = (fN2 / 0.79) × (depth + 10) − 10
+EAD = (fN2 / fN2_air) × (depth + 10) − 10
 END = (1 − fHe) × (depth + 10) − 10
 ```
 
-### SAC Rate / Gas Endurance
+### SAC Rate / RMV / Gas Endurance
 ```
 SAC (L/min) = pressureUsed × tankVolume / ((avgDepth/10 + 1) × diveTime)
+RMV (L/min) = SAC × (depth/10 + 1)   ← 해당 수심 실제 분당 호흡량
 usableGas   = (currentPressure − reservePressure) × tankVolume
 endurance   = usableGas / (SAC × (depth/10 + 1))
 ```
@@ -150,12 +157,24 @@ endurance   = usableGas / (SAC × (depth/10 + 1))
 ```
 P_t(t) = P_alv + (P_t0 − P_alv) × e^(−λ×t)
 λ = ln2 / half_time
+P_alv = (P_amb − 0.0627) × fGas
 ```
 
 ### GF 기반 허용 상한
 ```
 Ceiling = (P_t − GF_lo × b) / (GF_lo / a − 1)
 GF 보간: GF(depth) = GF_lo + (GF_hi − GF_lo) × (firstStop − depth) / firstStop
+```
+
+### 감압 계획 고급 기능
+- **마지막 정지 수심**: 기본 6m (GUE 표준), 사용자 설정 가능 (3m/6m/9m)
+- **ICD 경고**: 가스 전환 시 신규 기체의 fN₂ > 이전 기체 fN₂ + 0.005 이면 경고 (역방향 N₂ 증가 = 버블 리스크)
+- **기체별 소비량**: `gasUsed = RMV × ATA × stopTime`, 기체 레이블 기준으로 집계 후 표시
+
+### CCR Diluent 블렌딩
+```
+ppO₂_at_depth  = fO₂_dil × ATA
+maxSetpointDepth = (setpoint / fO₂_dil − 1) × 10  [m]
 ```
 
 ---
@@ -165,6 +184,7 @@ GF 보간: GF(depth) = GF_lo + (GF_hi − GF_lo) × (firstStop − depth) / firs
 - **DrumRollPicker**: PanResponder 드래그 + 관성 스크롤. capture-phase 핸들러로 부모 ScrollView 터치 충돌 방지.
 - **GasSlider**: 0~1 분율 전용. −/입력/+ 버튼 + 수평 PanResponder 슬라이더.
 - **StepInput**: 범용 숫자(정수·소수). GasSlider와 동일 패턴, min/max/step/unit 프롭.
+- **InfoModal**: 각 탭 헤더 ⓘ 버튼 → 해당 탭 알고리즘/공식 설명 모달. `useNavigation + useLayoutEffect`로 헤더 우측 버튼 주입.
 - 모든 색상은 `useAppTheme()` 훅으로 주입 — 하드코딩된 색상 없음 (accent 계열 예외).
 
 ---
@@ -175,6 +195,7 @@ GF 보간: GF(depth) = GF_lo + (GF_hi − GF_lo) × (firstStop − depth) / firs
 - `{placeholder}` 치환 지원: `t('key', { count: 3 })` → `"3개"`.
 - 언어 설정은 `app.store.ts`에 저장, 앱 재시작 없이 즉시 적용.
 - 기술 고유명사(EAN, Trimix, Air, SAC, GF, OTU, CNS, ppO₂ 등)는 양 언어 동일 표기.
+- `TranslationKey = keyof typeof ko` — `en.ts`는 `ko.ts`와 동일 키 세트를 유지해야 함.
 
 ---
 
@@ -195,6 +216,16 @@ GF 보간: GF(depth) = GF_lo + (GF_hi − GF_lo) × (firstStop − depth) / firs
 - 실행: `npm test`
 - UI 컴포넌트 테스트는 현재 미포함
 
+| 테스트 파일 | 대상 |
+|---|---|
+| `__tests__/lib/mod.test.ts` | MOD, Best Mix |
+| `__tests__/lib/ead-end.test.ts` | EAD, END |
+| `__tests__/lib/partial-pressure.test.ts` | 부분압 변환 |
+| `__tests__/lib/oc-blending.test.ts` | OC 블렌딩 |
+| `__tests__/lib/buhlmann.test.ts` | Bühlmann 조직 포화도 |
+| `__tests__/lib/oxygen-toxicity.test.ts` | CNS%/OTU |
+| `__tests__/lib/sac-rate.test.ts` | SAC Rate, Gas Endurance, RMV |
+
 ---
 
 ## 10. 계산 표준 (중요)
@@ -206,3 +237,6 @@ GF 보간: GF(depth) = GF_lo + (GF_hi − GF_lo) × (firstStop − depth) / firs
 | 공기 N₂ (정밀) | 0.781 | 실제 대기 조성 |
 | 공기 O₂ (계산용) | 0.21 | 표준 근사값 |
 | 공기 O₂ (정밀) | 0.209 | 실제 대기 조성 |
+| 수증기압 보정 | 0.0627 bar | Bühlmann 폐포 압력 공식 적용 |
+| ICD 경고 임계값 | ΔfN₂ > 0.5% | 부동소수점 오차 방지, 실제 위험 기준 |
+| 마지막 정지 기본값 | 6m | GUE 표준 (사용자 3/6/9m 선택 가능) |

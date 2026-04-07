@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Animated, Easing, PanResponder, ViewStyle } from 'react-native';
+import { View, Text, StyleSheet, Animated, PanResponder, ViewStyle } from 'react-native';
 import { useAppTheme } from '../../context/ThemeContext';
 
 export const DRUM_ITEM_H = 34;
@@ -7,7 +7,7 @@ const VISIBLE     = 3;
 const CENTER      = Math.floor(VISIBLE / 2);           // = 1
 export const DRUM_PICKER_H = DRUM_ITEM_H * VISIBLE;    // = 102
 const WINDOW      = 14;   // displayIndex 기준 렌더 범위 (±)
-const MOMENTUM_MS = 320;  // 관성 투영 시간 (ms): 빠를수록 더 멀리 날아감
+const MOMENTUM_MS = 200;  // 관성 투영 시간 (ms): 빠를수록 더 멀리 날아감
 
 function findNearest(items: number[], value: number): number {
   let best = 0, bestDiff = Math.abs(items[0] - value);
@@ -68,7 +68,8 @@ export default function DrumRollPicker({ label, items, value, onChange, formatVa
     const target = tyOf(idx);
     tySnap.current = target;
     Animated.spring(translateY, {
-      toValue: target, useNativeDriver: false, tension: 120, friction: 14,
+      toValue: target, useNativeDriver: false, tension: 120, friction: 20,
+      overshootClamping: true,
     }).start();
   }, [value]);
 
@@ -81,8 +82,11 @@ export default function DrumRollPicker({ label, items, value, onChange, formatVa
       onPanResponderTerminationRequest:    () => false,
 
       onPanResponderGrant: () => {
-        // 진행 중인 관성 애니메이션을 중단하고 현재 위치 저장
-        translateY.stopAnimation(v => { tySnap.current = v; });
+        // 진행 중인 관성 애니메이션을 중단하고 현재 위치 동기적으로 저장
+        // (콜백 방식은 비동기라 첫 onPanResponderMove와 race condition 발생)
+        translateY.stopAnimation();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        tySnap.current = (translateY as any)._value;
       },
 
       onPanResponderMove: (_, gs) => {
@@ -104,11 +108,12 @@ export default function DrumRollPicker({ label, items, value, onChange, formatVa
         tySnap.current = snapped;
 
         Animated.spring(translateY, {
-          toValue:  snapped,
-          velocity: gs.vy * 1000, // pts/ms → pts/s (Animated.spring 단위)
-          tension:  38,           // 낮을수록 느리게 감속
-          friction: 13,           // 낮을수록 탄성이 많아짐
-          useNativeDriver: false,
+          toValue:           snapped,
+          velocity:          Math.sign(gs.vy) * Math.min(Math.abs(gs.vy * 1000), 1800),
+          tension:           52,
+          friction:          18,
+          overshootClamping: true,  // 스냅 후 튕김 방지
+          useNativeDriver:   false,
         }).start();
 
         onChangeRef.current(itemsRef.current[newIdx]);

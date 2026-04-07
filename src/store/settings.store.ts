@@ -11,6 +11,9 @@ interface SettingsState {
   ppO2Deco: number;
   gfLow: number;
   gfHigh: number;
+  /** Bailout GF — CCR bailout 시 사용 (기본 GUE 권장: 30/90) */
+  gfBailoutLow: number;
+  gfBailoutHigh: number;
   ascentRate: number;   // m/min
   descentRate: number;  // m/min
   airComposition: AirCompositionMode;
@@ -24,6 +27,7 @@ interface SettingsState {
   setPpO2Work: (v: number) => void;
   setPpO2Deco: (v: number) => void;
   setGf: (low: number, high: number) => void;
+  setGfBailout: (low: number, high: number) => void;
   setAscentRate: (v: number) => void;
   setDescentRate: (v: number) => void;
   setAirComposition: (mode: AirCompositionMode) => void;
@@ -37,6 +41,8 @@ const DEFAULTS = {
   ppO2Deco: DEFAULT_PPO2_DECO,
   gfLow: 0.3,
   gfHigh: 0.8,
+  gfBailoutLow:  0.3,   // GUE Bailout 권장: 30/90
+  gfBailoutHigh: 0.9,
   ascentRate: 9,
   descentRate: 20,
   airComposition: 'precise' as AirCompositionMode,
@@ -53,6 +59,7 @@ export const useSettingsStore = create<SettingsState>()(
       setPpO2Work: (ppO2Work) => set({ ppO2Work }),
       setPpO2Deco: (ppO2Deco) => set({ ppO2Deco }),
       setGf: (gfLow, gfHigh) => set({ gfLow, gfHigh }),
+      setGfBailout: (gfBailoutLow, gfBailoutHigh) => set({ gfBailoutLow, gfBailoutHigh }),
       setAscentRate: (ascentRate) => set({ ascentRate }),
       setDescentRate: (descentRate) => set({ descentRate }),
       setAirComposition: (mode) => set({ airComposition: mode, ...getAirValues(mode) }),

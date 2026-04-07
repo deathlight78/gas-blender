@@ -1,9 +1,9 @@
 import { GasMix } from '../../types/gas.types';
 import {
   DecoInput, DecoResult, DecoStop,
-  GasConsumption, IcdWarning,
+  GasConsumption, IcdWarning, HypoxicWarning,
 } from '../../types/deco.types';
-import { SURFACE_PRESSURE } from '../gas/constants';
+import { SURFACE_PRESSURE, MIN_PPO2 } from '../gas/constants';
 import {
   CompartmentState,
   initialCompartmentState,
@@ -108,6 +108,33 @@ export function planDeco(input: DecoInput): DecoResult {
   const rmvDecoEff = rmvDeco ?? rmvBottom; // deco RMV 미입력 시 bottom RMV 사용
   const trackGas   = rmvBottom != null && rmvBottom > 0;
 
+  // ── 저산소 경고 (ppO₂ < 0.16 bar) ──────────────────────────────────
+  const hypoxicWarnings: HypoxicWarning[] = [];
+  const targetDepth =
+    segments.find(s => s.type === 'bottom')?.startDepth
+    ?? segments[segments.length - 1]?.endDepth
+    ?? 0;
+  const bottomMixForCheck = segments[0]?.gas ?? { fO2: airO2, fHe: 0, fN2: airN2 };
+  const bottomPpO2 = bottomMixForCheck.fO2 * depthToPressure(targetDepth);
+  if (bottomPpO2 < MIN_PPO2) {
+    hypoxicWarnings.push({
+      gasLabel: gasLabel(bottomMixForCheck),
+      depth:    targetDepth,
+      ppO2:     Math.round(bottomPpO2 * 1000) / 1000,
+    });
+  }
+  for (const dg of decoGases) {
+    const ppO2 = dg.mix.fO2 * depthToPressure(dg.switchDepth);
+    if (ppO2 < MIN_PPO2) {
+      hypoxicWarnings.push({
+        gasLabel: gasLabel(dg.mix),
+        depth:    dg.switchDepth,
+        ppO2:     Math.round(ppO2 * 1000) / 1000,
+      });
+    }
+  }
+  // ────────────────────────────────────────────────────────────────────
+
   let state: CompartmentState = initialCompartmentState(airN2);
   let cns = 0, otu = 0, runTime = 0;
 
@@ -169,8 +196,9 @@ export function planDeco(input: DecoInput): DecoResult {
       stops: [], totalDecoTime: 0,
       tts: Math.ceil(currentDepth / ascentRate),
       maxCns: cns, maxOtu: otu,
-      gasConsumptions: trackGas ? buildConsumptions(consumptionMap) : undefined,
-      icdWarnings: icdWarnings.length > 0 ? icdWarnings : undefined,
+      gasConsumptions:  trackGas ? buildConsumptions(consumptionMap) : undefined,
+      icdWarnings:      icdWarnings.length > 0 ? icdWarnings : undefined,
+      hypoxicWarnings:  hypoxicWarnings.length > 0 ? hypoxicWarnings : undefined,
     };
   }
 
@@ -250,8 +278,9 @@ export function planDeco(input: DecoInput): DecoResult {
     tts,
     maxCns: Math.round(cns * 10) / 10,
     maxOtu: Math.round(otu * 10) / 10,
-    gasConsumptions: trackGas ? buildConsumptions(consumptionMap) : undefined,
-    icdWarnings: icdWarnings.length > 0 ? icdWarnings : undefined,
+    gasConsumptions:  trackGas ? buildConsumptions(consumptionMap) : undefined,
+    icdWarnings:      icdWarnings.length > 0 ? icdWarnings : undefined,
+    hypoxicWarnings:  hypoxicWarnings.length > 0 ? hypoxicWarnings : undefined,
   };
 }
 

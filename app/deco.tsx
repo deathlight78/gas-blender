@@ -1,6 +1,8 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useLayoutEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useNavigation } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import InfoModal from '../src/components/ui/InfoModal';
 import StepInput from '../src/components/ui/StepInput';
 import GasSlider from '../src/components/ui/GasSlider';
 import SectionHeader from '../src/components/ui/SectionHeader';
@@ -18,13 +20,26 @@ let nextId = 1;
 
 export default function DecoScreen() {
   const scrollRef = useRef<ScrollView>(null);
-  const { gfLow, gfHigh, ascentRate, descentRate, depthUnit, airO2, airN2 } = useSettingsStore();
+  const { gfLow, gfHigh, gfBailoutLow, gfBailoutHigh, ascentRate, descentRate, depthUnit, airO2, airN2 } = useSettingsStore();
   const theme = useAppTheme();
+  const navigation = useNavigation();
 
   useFocusEffect(useCallback(() => {
     scrollRef.current?.scrollTo({ y: 0, animated: false });
   }, []));
   const { t } = useTranslation();
+
+  const [infoVisible, setInfoVisible] = useState(false);
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity onPress={() => setInfoVisible(true)} style={{ marginRight: 14 }}>
+          <Ionicons name="information-circle-outline" size={22} color={theme.headerText} />
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation, theme]);
 
   const [targetDepth, setTargetDepth] = useState(40);
   const [bottomTime, setBottomTime]   = useState(30);
@@ -32,6 +47,7 @@ export default function DecoScreen() {
   const [bottomFHe, setBottomFHe]     = useState(0.35);
   const [gfLo, setGfLo] = useState(Math.round(gfLow  * 100));
   const [gfHi, setGfHi] = useState(Math.round(gfHigh * 100));
+  const [bailoutMode, setBailoutMode] = useState(false);
   const [lastStop, setLastStop] = useState(6);   // m — GUE 기본값
   const [decoGases, setDecoGases] = useState<DecoGasRow[]>([
     { id: nextId++, switchDepth: 21, fO2: 0.5, fHe: 0 },
@@ -55,8 +71,8 @@ export default function DecoScreen() {
 
   function calculate() {
     const depthM  = toM(targetDepth);
-    const gfLoVal = gfLo / 100;
-    const gfHiVal = gfHi / 100;
+    const gfLoVal = bailoutMode ? gfBailoutLow  : gfLo / 100;
+    const gfHiVal = bailoutMode ? gfBailoutHigh : gfHi / 100;
 
     if (depthM <= 0)      { Alert.alert(t('error'), t('deco_err_depth'));       return; }
     if (bottomTime <= 0)  { Alert.alert(t('error'), t('deco_err_bottom_time')); return; }
@@ -100,6 +116,12 @@ export default function DecoScreen() {
 
   return (
     <ScrollView ref={scrollRef} style={[styles.container, { backgroundColor: theme.background }]} contentContainerStyle={styles.content}>
+      <InfoModal
+        visible={infoVisible}
+        onClose={() => setInfoVisible(false)}
+        title={t('info_deco_title')}
+        content={t('info_deco_content')}
+      />
 
       {/* ── 다이브 프로파일 ── */}
       <SectionHeader title={t('deco_profile')} />
@@ -150,7 +172,32 @@ export default function DecoScreen() {
 
       {/* ── Gradient Factor ── */}
       <SectionHeader title={t('deco_gf')} subtitle={t('deco_gf_subtitle')} />
-      <View style={[styles.card, { backgroundColor: theme.surface }]}>
+      {/* Bailout 토글 */}
+      <View style={[styles.bailoutRow, { backgroundColor: theme.surface, borderColor: bailoutMode ? theme.accent : theme.border }]}>
+        <View style={styles.bailoutLabelWrap}>
+          <Text style={[styles.bailoutLabel, { color: bailoutMode ? theme.accent : theme.text }]}>
+            {t('deco_bailout_mode')}
+          </Text>
+          {bailoutMode && (
+            <Text style={[styles.bailoutActive, { color: theme.accent }]}>
+              {t('deco_bailout_active', {
+                lo: String(Math.round(gfBailoutLow * 100)),
+                hi: String(Math.round(gfBailoutHigh * 100)),
+              })}
+            </Text>
+          )}
+        </View>
+        <TouchableOpacity
+          style={[styles.bailoutToggle, { backgroundColor: bailoutMode ? theme.accent : theme.surfaceAlt }]}
+          onPress={() => setBailoutMode(v => !v)}
+        >
+          <Text style={[styles.bailoutToggleText, { color: bailoutMode ? '#fff' : theme.textMuted }]}>
+            {bailoutMode ? 'ON' : 'OFF'}
+          </Text>
+        </TouchableOpacity>
+      </View>
+      <View style={[styles.card, { backgroundColor: theme.surface, opacity: bailoutMode ? 0.4 : 1 }]}
+            pointerEvents={bailoutMode ? 'none' : 'auto'}>
         <StepInput label={t('deco_gf_low')}  value={gfLo} onChange={setGfLo} min={10} max={90}  step={5} unit="%" />
         <StepInput label={t('deco_gf_high')} value={gfHi} onChange={setGfHi} min={20} max={100} step={5} unit="%" />
       </View>
@@ -189,6 +236,23 @@ export default function DecoScreen() {
             subtitle={`GF ${gfLo}/${gfHi} · ${t('deco_ascent_label')} ${ascentRate}m/min · Last ${lastStop}m`}
           />
           <DecoSummary result={result} />
+
+          {/* 저산소 기체 경고 */}
+          {result.hypoxicWarnings && result.hypoxicWarnings.length > 0 && (
+            <View style={[styles.icdBox, { backgroundColor: theme.warningBg }]}>
+              <Text style={[styles.icdTitle, { color: theme.warningText }]}>{t('deco_hypoxic_warning')}</Text>
+              {result.hypoxicWarnings.map((w, i) => (
+                <Text key={i} style={[styles.icdItem, { color: theme.warningText }]}>
+                  {t('deco_hypoxic_detail', {
+                    gas:  w.gasLabel,
+                    depth: String(w.depth),
+                    ppo2: w.ppO2.toFixed(3),
+                  })}
+                </Text>
+              ))}
+              <Text style={[styles.icdNote, { color: theme.warningText }]}>{t('deco_hypoxic_note')}</Text>
+            </View>
+          )}
 
           {/* ICD 경고 */}
           {result.icdWarnings && result.icdWarnings.length > 0 && (
@@ -272,6 +336,16 @@ const styles = StyleSheet.create({
   hintText: { fontSize: 11, textAlign: 'center', marginTop: 4, marginBottom: 4 },
   calcBtn: { borderRadius: 12, paddingVertical: 16, alignItems: 'center', marginTop: 16, marginBottom: 4 },
   calcBtnText: { fontSize: 17, fontWeight: '700' },
+  bailoutRow: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    borderRadius: 10, borderWidth: 1.5, paddingHorizontal: 14, paddingVertical: 10,
+    marginBottom: 4,
+  },
+  bailoutLabelWrap: { flex: 1 },
+  bailoutLabel: { fontSize: 14, fontWeight: '700' },
+  bailoutActive: { fontSize: 11, marginTop: 2 },
+  bailoutToggle: { borderRadius: 8, paddingHorizontal: 16, paddingVertical: 6, marginLeft: 12 },
+  bailoutToggleText: { fontSize: 13, fontWeight: '700' },
   icdBox: { borderRadius: 8, padding: 12, marginTop: 8, gap: 4 },
   icdTitle: { fontSize: 13, fontWeight: '700' },
   icdItem:  { fontSize: 12 },

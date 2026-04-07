@@ -106,6 +106,26 @@ export const ko = {
   blend_oxygen_pct: 'O₂ %',
   blend_helium_pct: 'He %',
 
+  // CCR 블렌딩 추가 결과
+  blend_diluent_mod: 'Diluent MOD (ppO₂ 1.4)',
+  blend_diluent_mod_subtitle: 'ppO₂ 1.4 bar 기준 최대 운용 수심',
+  blend_hypoxic_limit: '저산소 한계 수심',
+  blend_hypoxic_limit_subtitle: 'Diluent ppO₂ = 0.16 bar 수심 (음수=해수면 저산소)',
+  blend_pn2_at_depth: '최대 수심 pN₂',
+  blend_pn2_at_depth_subtitle: '질소 마취 참고값',
+  blend_setpoint2_label: 'SP2 (상승용)',
+  blend_setpoint2_hint: '상승 시 전환할 저수심 setpoint (예: 0.70)',
+  blend_sp2_switch_depth: 'SP1→SP2 전환 수심',
+  blend_sp2_switch_depth_subtitle: '이 수심 이상에서 SP2로 전환',
+  blend_o2_consumption: 'O₂ 소비량 추정',
+  blend_o2_consumption_subtitle: 'CCR VO₂ = 0.5 L/min 기준',
+  blend_dive_time: '계획 다이빙 시간',
+  blend_o2_tank_size: 'O₂ 실린더 수중 용량',
+  blend_o2_consumed: '예상 O₂ 소비량',
+  blend_o2_consumed_subtitle: '0.5 L/min × 다이빙 시간',
+  blend_o2_pressure_drop: '예상 압력 강하',
+  blend_o2_pressure_drop_subtitle: '소비량 ÷ 실린더 용량',
+
   // 감압 계획
   deco_profile: '다이브 프로파일',
   deco_target_depth: '목표 수심',
@@ -149,6 +169,11 @@ export const ko = {
   deco_icd_warning: '⚠ ICD 경고',
   deco_icd_detail: '{depth}m 전환: N₂ {prev}% → {next}% (역방향 증가)',
   deco_icd_note: '역방향 가스 전환은 불활성 기체 불균형(ICD)을 유발할 수 있습니다.',
+  deco_hypoxic_warning: '⚠ 저산소 기체 경고',
+  deco_hypoxic_detail: '{gas} ({depth}m에서 ppO₂ {ppo2} bar) — 최소 한계 0.16 bar 미만',
+  deco_hypoxic_note: '해당 수심에서 저산소증 위험. 기체 조성 또는 전환 수심을 조정하세요.',
+  deco_bailout_mode: 'Bailout 모드',
+  deco_bailout_active: 'Bailout GF {lo}/{hi} 적용 중',
 
   // 설정
   settings_ppo2: 'ppO₂ 한계',
@@ -159,6 +184,9 @@ export const ko = {
   settings_ppo2_deco_hint: '권장: 1.6 bar (감압 정지 중)',
   settings_gf: 'Gradient Factor',
   settings_gf_subtitle: '감압 보수성 설정',
+  settings_gf_bailout: 'Bailout GF',
+  settings_gf_bailout_subtitle: 'CCR Bailout 시 사용할 Gradient Factor',
+  settings_gf_bailout_hint: 'GUE 권장: GF 30/90',
   settings_units: '단위',
   settings_depth: '수심',
   settings_pressure: '압력',
@@ -206,6 +234,114 @@ export const ko = {
   gplan_reserve: '예비 압력',
   gplan_usable_gas: '사용 가능 기체량',
   gplan_time: '예상 사용 시간',
+
+  // 인포 모달
+  info_close: '닫기',
+
+  info_blending_title: '블렌딩 계산 안내',
+  info_blending_content:
+    '◆ OC 부분압 블렌딩\n\n' +
+    '헬륨 → 산소 → 공기 순서로 주입해 목표 혼합기체를 만듭니다. ' +
+    '각 기체를 얼마나 더 넣어야 하는지를 "목표 압력에서 현재 압력을 뺀 차이"로 계산하며, ' +
+    '마지막 공기 탑업 시 공기 속 O₂ 비율까지 자동 보정합니다.\n\n' +
+    '주입 순서가 중요한 이유: 헬륨을 먼저 넣으면 혼합 열이 분산되고, ' +
+    '산소를 중간에 넣어 농도를 희석한 뒤 공기로 최종 조정합니다.\n\n' +
+    '──────────────────────\n\n' +
+    '◆ CCR — Setpoint와 Diluent\n\n' +
+    'CCR(폐쇄회로 리브리더)은 Diluent(희석 기체)와 순산소를 자동 혼합해 ' +
+    '목표 O₂ 분압(Setpoint)을 일정하게 유지합니다.\n\n' +
+    '특정 수심에서 Diluent만으로의 O₂ 분압:\n' +
+    '  → O₂ 분압 = Diluent O₂ 비율 × 절대압(ATA)\n' +
+    '  → 절대압(ATA) = 1 + 수심 ÷ 10\n\n' +
+    'Setpoint를 유지할 수 있는 최대 수심:\n' +
+    '  → 최대 수심 = (Setpoint ÷ Diluent O₂ 비율 − 1) × 10\n\n' +
+    '──────────────────────\n\n' +
+    '◆ Diluent MOD (최대 운용 수심)\n\n' +
+    'Diluent 자체의 O₂ 분압이 1.4 bar를 초과하는 수심부터는 산소 독성 위험이 생깁니다. ' +
+    '이 수심이 Diluent MOD이며, 계획 수심은 반드시 이 값보다 얕아야 합니다.\n\n' +
+    '──────────────────────\n\n' +
+    '◆ 저산소 한계 수심\n\n' +
+    '수심이 얕아질수록 Diluent O₂ 분압이 낮아집니다. ' +
+    'O₂ 분압이 0.16 bar 아래로 떨어지면 저산소 블랙아웃 위험이 있습니다. ' +
+    '이 수심(저산소 한계)보다 얕아지면 O₂ flush(순산소 주입)로 분압을 보충해야 합니다.\n\n' +
+    '──────────────────────\n\n' +
+    '◆ 최대 수심 pN₂ (질소 분압)\n\n' +
+    'Diluent 속 질소가 수심에서 얼마나 압축되는지 나타냅니다. ' +
+    '질소 분압이 3.2 bar를 넘으면 공기 40m와 같은 마취 효과(나르코시스)가 생깁니다. ' +
+    'Trimix를 사용하는 이유 중 하나입니다.\n\n' +
+    '──────────────────────\n\n' +
+    '◆ Dual Setpoint (이중 Setpoint)\n\n' +
+    '깊은 곳에서는 높은 Setpoint(SP1, 예: 1.3 bar)로 대사 효율을 높이고, ' +
+    '얕은 곳으로 올라오면 낮은 Setpoint(SP2, 예: 0.7 bar)로 전환해 산소 독성 위험을 줄입니다. ' +
+    'SP1→SP2로 전환해야 하는 수심은 Diluent ppO₂ = SP2가 되는 깊이입니다.\n\n' +
+    '──────────────────────\n\n' +
+    '◆ O₂ 소비량 추정\n\n' +
+    'CCR은 다이버의 대사로 소비된 O₂만큼 자동으로 보충합니다. ' +
+    '안정 상태의 표준 소비율은 약 0.5 L/분이며, ' +
+    '총 소비량 = 0.5 × 다이빙 시간(분)으로 계산합니다. ' +
+    '실린더 수중 용량(L)으로 나누면 예상 압력 강하를 알 수 있어 O₂ 탱크 계획에 활용합니다.',
+
+  info_calculator_title: '기체 분석 계산 안내',
+  info_calculator_content:
+    '◆ MOD (최대 운용 수심)\n\n' +
+    '산소 분압이 허용 한도(작업 시 1.4 bar, 감압 시 1.6 bar)를 넘지 않는 가장 깊은 수심입니다. ' +
+    'O₂ 비율이 높을수록 MOD는 얕아지고, 낮을수록 깊어집니다.\n\n' +
+    '──────────────────────\n\n' +
+    '◆ Best Mix (최적 혼합비)\n\n' +
+    '목표 수심에서 O₂ 분압이 정확히 작업 기준(ppO₂ work)이 되도록 역산한 O₂ 비율입니다. ' +
+    '이 비율로 혼합하면 산소 독성 한계 내에서 가장 높은 O₂ 농도를 사용할 수 있습니다.\n\n' +
+    '──────────────────────\n\n' +
+    '◆ EAD (등가 공기 수심)\n\n' +
+    'Nitrox 기체를 사용할 때 감압 부담이 "공기로 다이빙한다면 몇 미터에 해당하는가"를 나타냅니다. ' +
+    'EAD가 실제 수심보다 얕으면 질소 흡수가 적어 감압 부담이 줄어드는 효과가 있습니다.\n\n' +
+    '──────────────────────\n\n' +
+    '◆ END (등가 나르코틱 수심)\n\n' +
+    'Trimix에서 헬륨을 넣으면 마취 효과가 줄어듭니다. ' +
+    'END는 "이 혼합기체를 쓰면 공기로 몇 미터를 다이빙하는 것과 같은 마취 효과인가"를 나타냅니다. ' +
+    '헬륨이 많을수록 END가 낮아져 깊은 수심에서도 맑은 정신을 유지할 수 있습니다.',
+
+  info_gasplan_title: '가스 계획 공식',
+  info_gasplan_content:
+    '[ SAC Rate (표면 공기 소비율) ]\n\n' +
+    '  SAC = (P_used × V) / (ATA × T)  [L/min]\n' +
+    '  ATA = 1 + depth / 10\n\n' +
+    '─────────────────────────\n' +
+    '[ RMV (실제 분당 호흡량) ]\n\n' +
+    '  RMV = SAC × ATA  [L/min]\n\n' +
+    '─────────────────────────\n' +
+    '[ 가스 총 소비량 ]\n\n' +
+    '  gas_L = P × V  [L]\n\n' +
+    '─────────────────────────\n' +
+    '[ 가스 사용 가능 시간 ]\n\n' +
+    '  T = usable_gas / RMV  [min]\n' +
+    '  usable_gas = (P_cur − P_reserve) × V  [L]',
+
+  info_deco_title: '감압 계획 알고리즘',
+  info_deco_content:
+    '[ Bühlmann ZHL-16C ]\n\n' +
+    '  16개 조직 구획, 반감기 4 ~ 635 min\n\n' +
+    '─────────────────────────\n' +
+    '[ Schreiner 방정식 (조직 포화) ]\n\n' +
+    '  P_t = P_alv + (P₀ − P_alv) × e^(−λ×t)\n' +
+    '  λ = ln2 / t½\n' +
+    '  P_alv = (P_amb − 0.0627) × fGas\n\n' +
+    '─────────────────────────\n' +
+    '[ GF Ceiling ]\n\n' +
+    '  M-value: P_limit = a + P_t / b\n' +
+    '  GF 보간: gf = GFlow + (GFhigh−GFlow)\n' +
+    '           × (depth−firstStop) / firstStop\n' +
+    '  Ceiling = (P_t − a×GF) / (GF/b − 1)\n\n' +
+    '─────────────────────────\n' +
+    '[ ICD (역확산) 경고 ]\n\n' +
+    '  기체 전환 시 ΔfN₂ > 0.5% → 경고\n\n' +
+    '─────────────────────────\n' +
+    '[ CNS% (중추신경 독성) ]\n\n' +
+    '  NOAA 표 기반 ppO₂별 허용 노출 시간\n' +
+    '  CNS% = Σ (Δt / limit(ppO₂)) × 100\n\n' +
+    '─────────────────────────\n' +
+    '[ OTU (폐 산소 독성) ]\n\n' +
+    '  OTU/min = ((ppO₂ − 0.5) / 0.5)^0.83\n' +
+    '  (Repex 공식, ppO₂ > 0.5 bar 구간)',
 
   // 면책 조항
   disclaimer_title: '⚠️ 중요 안전 안내',

@@ -1,6 +1,8 @@
-import { useState, useMemo, useRef, useCallback } from 'react';
+import { useState, useMemo, useRef, useCallback, useLayoutEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useNavigation } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import InfoModal from '../src/components/ui/InfoModal';
 import DrumRollPicker from '../src/components/ui/DrumRollPicker';
 import GasSlider from '../src/components/ui/GasSlider';
 import ResultCard from '../src/components/ui/ResultCard';
@@ -32,10 +34,23 @@ export default function GasPlanScreen() {
   const { depthUnit, pressureUnit } = useSettingsStore();
   const theme = useAppTheme();
   const { t } = useTranslation();
+  const navigation = useNavigation();
 
   useFocusEffect(useCallback(() => {
     scrollRef.current?.scrollTo({ y: 0, animated: false });
   }, []));
+
+  const [infoVisible, setInfoVisible] = useState(false);
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity onPress={() => setInfoVisible(true)} style={{ marginRight: 14 }}>
+          <Ionicons name="information-circle-outline" size={22} color={theme.headerText} />
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation, theme]);
 
   // SAC Rate 상태
   const [sacPressureUsed, setSacPressureUsed] = useState(100);
@@ -134,6 +149,12 @@ export default function GasPlanScreen() {
       style={[styles.container, { backgroundColor: theme.background }]}
       contentContainerStyle={styles.content}
     >
+      <InfoModal
+        visible={infoVisible}
+        onClose={() => setInfoVisible(false)}
+        title={t('info_gasplan_title')}
+        content={t('info_gasplan_content')}
+      />
       {/* ── SAC Rate ── */}
       <SectionHeader title={t('calc_sac')} subtitle={t('calc_sac_subtitle')} />
       <View style={[styles.card, { backgroundColor: theme.surface }]}>

@@ -62,6 +62,16 @@ export interface IcdWarning {
   newFN2: number;
 }
 
+/** 저산소 기체 경고 (ppO₂ < 0.16 bar) */
+export interface HypoxicWarning {
+  /** 기체 라벨 */
+  gasLabel: string;
+  /** 해당 기체를 사용하는 수심 (m) */
+  depth: number;
+  /** 그 수심에서의 실제 ppO₂ (bar) */
+  ppO2: number;
+}
+
 /** 감압 계획 결과 */
 export interface DecoResult {
   stops: DecoStop[];
@@ -77,4 +87,6 @@ export interface DecoResult {
   gasConsumptions?: GasConsumption[];
   /** ICD 경고 목록 */
   icdWarnings?: IcdWarning[];
+  /** 저산소 기체 경고 목록 (ppO₂ < 0.16 bar) */
+  hypoxicWarnings?: HypoxicWarning[];
 }

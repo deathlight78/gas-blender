@@ -69,6 +69,8 @@ export default function SettingsScreen() {
   const [descentRate, setDescentRate] = useState(store.descentRate);
   const [gfLow, setGfLow] = useState(store.gfLow);
   const [gfHigh, setGfHigh] = useState(store.gfHigh);
+  const [gfBailoutLow,  setGfBailoutLow]  = useState(store.gfBailoutLow);
+  const [gfBailoutHigh, setGfBailoutHigh] = useState(store.gfBailoutHigh);
 
   function save() {
     if (ppO2Work < 1.0 || ppO2Work > 2.0) { Alert.alert(t('error'), t('settings_err_ppo2_work_range')); return; }
@@ -80,6 +82,7 @@ export default function SettingsScreen() {
     store.setPpO2Work(ppO2Work);
     store.setPpO2Deco(ppO2Deco);
     store.setGf(gfLow, gfHigh);
+    store.setGfBailout(gfBailoutLow, gfBailoutHigh);
     store.setAscentRate(ascentRate);
     store.setDescentRate(descentRate);
     Alert.alert(t('confirm'), t('settings_save_done'));
@@ -99,6 +102,8 @@ export default function SettingsScreen() {
           setDescentRate(20);
           setGfLow(0.3);
           setGfHigh(0.8);
+          setGfBailoutLow(0.3);
+          setGfBailoutHigh(0.9);
         },
       },
     ]);
@@ -141,6 +146,13 @@ export default function SettingsScreen() {
         <Text style={[styles.gfHint, { color: theme.textMuted }]}>
           GF {(gfLow * 100).toFixed(0)}/{(gfHigh * 100).toFixed(0)} — {gfLow <= 0.3 && gfHigh >= 0.8 ? t('settings_gf_conservative') : gfLow >= 0.7 ? t('settings_gf_aggressive') : t('settings_gf_moderate')}
         </Text>
+      </View>
+
+      <SectionHeader title={t('settings_gf_bailout')} subtitle={t('settings_gf_bailout_subtitle')} />
+      <View style={[styles.card, { backgroundColor: theme.surface }]}>
+        <GasSlider label={`GF Low: ${(gfBailoutLow * 100).toFixed(0)}%`} value={gfBailoutLow} onChange={(v) => setGfBailoutLow(Math.min(v, gfBailoutHigh))} min={0.1} max={gfBailoutHigh} step={0.05} />
+        <GasSlider label={`GF High: ${(gfBailoutHigh * 100).toFixed(0)}%`} value={gfBailoutHigh} onChange={(v) => setGfBailoutHigh(Math.max(v, gfBailoutLow))} min={gfBailoutLow} max={1.0} step={0.05} />
+        <Text style={[styles.gfHint, { color: theme.textMuted }]}>{t('settings_gf_bailout_hint')}</Text>
       </View>
 
       <SectionHeader title={t('settings_units')} />
