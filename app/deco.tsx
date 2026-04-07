@@ -145,26 +145,67 @@ export default function DecoScreen() {
 
       {/* ── 감압 기체 ── */}
       <SectionHeader title={t('deco_deco_gases')} subtitle={t('deco_deco_gases_subtitle')} />
-      {decoGases.map((dg) => (
-        <View key={dg.id} style={[styles.card, { backgroundColor: theme.surface }, styles.decoGasCard]}>
-          <View style={styles.decoGasHeader}>
-            <Text style={[styles.decoGasTitle, { color: theme.textSecondary }]}>
-              EAN {(dg.fO2 * 100).toFixed(0)}{dg.fHe > 0 ? `/ He ${(dg.fHe * 100).toFixed(0)}` : ''}
-            </Text>
-            <TouchableOpacity onPress={() => setDecoGases(p => p.filter(g => g.id !== dg.id))}>
-              <Text style={[styles.removeBtn, { color: theme.textMuted }]}>✕</Text>
-            </TouchableOpacity>
-          </View>
-          <StepInput label={t('deco_switch_depth')}
-            value={dg.switchDepth}
-            onChange={v => setDecoGases(p => p.map(g => g.id === dg.id ? { ...g, switchDepth: v } : g))}
-            min={depthUnit === 'ft' ? 10 : 3} max={switchMax} step={switchStep} unit={depthUnit_label} />
-          <GasSlider label="O₂ %"
-            value={dg.fO2}
-            onChange={v => setDecoGases(p => p.map(g => g.id === dg.id ? { ...g, fO2: v } : g))}
-            min={0.04} max={1} step={0.01} />
+      {decoGases.length === 0 && (
+        <View style={[styles.emptyGasBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+          <Text style={[styles.emptyGasText, { color: theme.textMuted }]}>{t('deco_add_gas')}</Text>
         </View>
-      ))}
+      )}
+      {decoGases.map((dg, index) => {
+        const gasLabel = dg.fHe > 0
+          ? `Trimix ${(dg.fO2 * 100).toFixed(0)}/${(dg.fHe * 100).toFixed(0)}`
+          : `EAN ${(dg.fO2 * 100).toFixed(0)}`;
+        const fN2 = Math.max(0, 1 - dg.fO2 - dg.fHe);
+        const ata = dg.switchDepth / 10 + 1;
+        const ppO2AtSwitch = (dg.fO2 * ata).toFixed(2);
+        return (
+          <View key={dg.id} style={[styles.decoGasCard, { backgroundColor: theme.surface }]}>
+            {/* 카드 헤더 */}
+            <View style={[styles.decoGasHeader, { borderBottomColor: theme.surfaceAlt }]}>
+              <View style={[styles.cylinderBadge, { backgroundColor: theme.accent }]}>
+                <Text style={styles.cylinderBadgeText}>{index + 1}</Text>
+              </View>
+              <View style={styles.decoGasTitleWrap}>
+                <Text style={[styles.cylinderLabel, { color: theme.text }]}>
+                  {t('deco_cylinder')} {index + 1}
+                </Text>
+                <Text style={[styles.decoGasSubtitle, { color: theme.textMuted }]}>
+                  {gasLabel} · {dg.switchDepth}{depthUnit_label}
+                </Text>
+              </View>
+              <TouchableOpacity
+                style={[styles.removeBtnWrap, { backgroundColor: theme.warningBg }]}
+                onPress={() => setDecoGases(p => p.filter(g => g.id !== dg.id))}
+              >
+                <Text style={[styles.removeBtnText, { color: theme.errorText }]}>
+                  {t('deco_remove_gas')}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* 카드 바디 */}
+            <View style={styles.decoGasBody}>
+              <StepInput label={t('deco_switch_depth')}
+                value={dg.switchDepth}
+                onChange={v => setDecoGases(p => p.map(g => g.id === dg.id ? { ...g, switchDepth: v } : g))}
+                min={depthUnit === 'ft' ? 10 : 3} max={switchMax} step={switchStep} unit={depthUnit_label} />
+              <GasSlider label="O₂ %"
+                value={dg.fO2}
+                onChange={v => setDecoGases(p => p.map(g => g.id === dg.id ? { ...g, fO2: v } : g))}
+                min={0.04} max={1} step={0.01} />
+            </View>
+
+            {/* 카드 푸터 — 가스 정보 */}
+            <View style={[styles.decoGasFooter, { borderTopColor: theme.surfaceAlt }]}>
+              <Text style={[styles.decoGasInfo, { color: theme.textMuted }]}>
+                N₂ {(fN2 * 100).toFixed(0)}%
+              </Text>
+              <Text style={[styles.decoGasInfo, { color: theme.accent }]}>
+                ppO₂ {ppO2AtSwitch} bar @ {dg.switchDepth}{depthUnit_label}
+              </Text>
+            </View>
+          </View>
+        );
+      })}
       <TouchableOpacity style={[styles.addGasBtn, { borderColor: theme.accent }]}
         onPress={() => setDecoGases(p => [...p, { id: nextId++, switchDepth: 9, fO2: 0.36, fHe: 0 }])}>
         <Text style={[styles.addGasBtnText, { color: theme.accent }]}>{t('deco_add_gas')}</Text>
@@ -172,34 +213,58 @@ export default function DecoScreen() {
 
       {/* ── Gradient Factor ── */}
       <SectionHeader title={t('deco_gf')} subtitle={t('deco_gf_subtitle')} />
-      {/* Bailout 토글 */}
-      <View style={[styles.bailoutRow, { backgroundColor: theme.surface, borderColor: bailoutMode ? theme.accent : theme.border }]}>
-        <View style={styles.bailoutLabelWrap}>
-          <Text style={[styles.bailoutLabel, { color: bailoutMode ? theme.accent : theme.text }]}>
-            {t('deco_bailout_mode')}
-          </Text>
-          {bailoutMode && (
-            <Text style={[styles.bailoutActive, { color: theme.accent }]}>
-              {t('deco_bailout_active', {
-                lo: String(Math.round(gfBailoutLow * 100)),
-                hi: String(Math.round(gfBailoutHigh * 100)),
-              })}
+      <View style={[styles.gfCard, { backgroundColor: theme.surface }]}>
+        {/* 모드 탭 선택 */}
+        <View style={[styles.gfModeRow, { borderBottomColor: theme.surfaceAlt }]}>
+          <TouchableOpacity
+            style={[styles.gfModeBtn, !bailoutMode && { backgroundColor: theme.accent }]}
+            onPress={() => setBailoutMode(false)}
+          >
+            <Text style={[styles.gfModeBtnText, { color: !bailoutMode ? '#fff' : theme.textMuted }]}>
+              {t('deco_gf_mode_normal')}
             </Text>
-          )}
+            <Text style={[styles.gfModeBtnSub, { color: !bailoutMode ? 'rgba(255,255,255,0.8)' : theme.textMuted }]}>
+              GF {gfLo}/{gfHi}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.gfModeBtn, bailoutMode && styles.gfModeBtnBailout]}
+            onPress={() => setBailoutMode(true)}
+          >
+            <Text style={[styles.gfModeBtnText, { color: bailoutMode ? '#fff' : theme.textMuted }]}>
+              ⚠ {t('deco_gf_mode_bailout')}
+            </Text>
+            <Text style={[styles.gfModeBtnSub, { color: bailoutMode ? 'rgba(255,255,255,0.8)' : theme.textMuted }]}>
+              GF {Math.round(gfBailoutLow * 100)}/{Math.round(gfBailoutHigh * 100)}
+            </Text>
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity
-          style={[styles.bailoutToggle, { backgroundColor: bailoutMode ? theme.accent : theme.surfaceAlt }]}
-          onPress={() => setBailoutMode(v => !v)}
-        >
-          <Text style={[styles.bailoutToggleText, { color: bailoutMode ? '#fff' : theme.textMuted }]}>
-            {bailoutMode ? 'ON' : 'OFF'}
-          </Text>
-        </TouchableOpacity>
-      </View>
-      <View style={[styles.card, { backgroundColor: theme.surface, opacity: bailoutMode ? 0.4 : 1 }]}
-            pointerEvents={bailoutMode ? 'none' : 'auto'}>
-        <StepInput label={t('deco_gf_low')}  value={gfLo} onChange={setGfLo} min={10} max={90}  step={5} unit="%" />
-        <StepInput label={t('deco_gf_high')} value={gfHi} onChange={setGfHi} min={20} max={100} step={5} unit="%" />
+
+        {/* 일반 모드 — GF 슬라이더 */}
+        {!bailoutMode && (
+          <View style={styles.gfBody}>
+            <StepInput label={t('deco_gf_low')}  value={gfLo} onChange={setGfLo} min={10} max={90}  step={5} unit="%" />
+            <StepInput label={t('deco_gf_high')} value={gfHi} onChange={setGfHi} min={20} max={100} step={5} unit="%" />
+            <Text style={[styles.gfBodyHint, { color: theme.textMuted }]}>{t('deco_gf_normal_hint')}</Text>
+          </View>
+        )}
+
+        {/* Bailout 모드 — 설정값 표시 */}
+        {bailoutMode && (
+          <View style={[styles.gfBailoutBody, { backgroundColor: '#7C1D0015' }]}>
+            <View style={styles.gfBailoutValueRow}>
+              <View style={styles.gfBailoutBadge}>
+                <Text style={styles.gfBailoutBadgeText}>BAILOUT GF</Text>
+              </View>
+              <Text style={[styles.gfBailoutValue, { color: '#CC4400' }]}>
+                {Math.round(gfBailoutLow * 100)} / {Math.round(gfBailoutHigh * 100)}
+              </Text>
+            </View>
+            <Text style={[styles.gfBailoutDesc, { color: theme.textMuted }]}>
+              {t('deco_gf_bailout_from_settings')}
+            </Text>
+          </View>
+        )}
       </View>
 
       {/* ── 마지막 정지 수심 ── */}
@@ -327,25 +392,72 @@ const styles = StyleSheet.create({
   mixInfo: { flexDirection: 'row', justifyContent: 'space-between', paddingTop: 8, borderTopWidth: 1, marginTop: 4 },
   mixLabel: { fontSize: 13, fontWeight: '600' },
   n2Text:   { fontSize: 13 },
-  decoGasCard: { marginBottom: 8 },
-  decoGasHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 },
-  decoGasTitle: { fontSize: 14, fontWeight: '600' },
-  removeBtn: { fontSize: 16, paddingHorizontal: 4 },
-  addGasBtn: { borderWidth: 1.5, borderStyle: 'dashed', borderRadius: 10, paddingVertical: 12, alignItems: 'center', marginBottom: 4 },
+  decoGasCard: {
+    borderRadius: 12, marginBottom: 12,
+    shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 6, elevation: 2,
+    overflow: 'hidden',
+  },
+  decoGasHeader: {
+    flexDirection: 'row', alignItems: 'center',
+    paddingHorizontal: 14, paddingVertical: 12,
+    borderBottomWidth: 1,
+  },
+  cylinderBadge: {
+    width: 28, height: 28, borderRadius: 14,
+    alignItems: 'center', justifyContent: 'center',
+    marginRight: 10,
+  },
+  cylinderBadgeText: { fontSize: 14, fontWeight: '700', color: '#fff' },
+  decoGasTitleWrap: { flex: 1 },
+  cylinderLabel: { fontSize: 14, fontWeight: '700' },
+  decoGasSubtitle: { fontSize: 12, marginTop: 1 },
+  removeBtnWrap: {
+    paddingHorizontal: 10, paddingVertical: 5,
+    borderRadius: 6, marginLeft: 8,
+  },
+  removeBtnText: { fontSize: 12, fontWeight: '600' },
+  decoGasBody: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4 },
+  decoGasFooter: {
+    flexDirection: 'row', justifyContent: 'space-between',
+    paddingHorizontal: 14, paddingVertical: 8,
+    borderTopWidth: 1,
+  },
+  decoGasInfo: { fontSize: 12 },
+  emptyGasBox: {
+    borderWidth: 1.5, borderStyle: 'dashed', borderRadius: 10,
+    paddingVertical: 20, alignItems: 'center', marginBottom: 8,
+  },
+  emptyGasText: { fontSize: 13 },
+  addGasBtn: { borderWidth: 1.5, borderStyle: 'dashed', borderRadius: 10, paddingVertical: 14, alignItems: 'center', marginBottom: 4 },
   addGasBtnText: { fontWeight: '600', fontSize: 14 },
   hintText: { fontSize: 11, textAlign: 'center', marginTop: 4, marginBottom: 4 },
   calcBtn: { borderRadius: 12, paddingVertical: 16, alignItems: 'center', marginTop: 16, marginBottom: 4 },
   calcBtnText: { fontSize: 17, fontWeight: '700' },
-  bailoutRow: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    borderRadius: 10, borderWidth: 1.5, paddingHorizontal: 14, paddingVertical: 10,
-    marginBottom: 4,
+  gfCard: {
+    borderRadius: 12, marginBottom: 4, overflow: 'hidden',
+    shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 6, elevation: 2,
   },
-  bailoutLabelWrap: { flex: 1 },
-  bailoutLabel: { fontSize: 14, fontWeight: '700' },
-  bailoutActive: { fontSize: 11, marginTop: 2 },
-  bailoutToggle: { borderRadius: 8, paddingHorizontal: 16, paddingVertical: 6, marginLeft: 12 },
-  bailoutToggleText: { fontSize: 13, fontWeight: '700' },
+  gfModeRow: {
+    flexDirection: 'row', borderBottomWidth: 1,
+  },
+  gfModeBtn: {
+    flex: 1, paddingVertical: 12, paddingHorizontal: 12,
+    alignItems: 'center', gap: 2,
+  },
+  gfModeBtnBailout: { backgroundColor: '#CC4400' },
+  gfModeBtnText: { fontSize: 13, fontWeight: '700' },
+  gfModeBtnSub: { fontSize: 11 },
+  gfBody: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 12 },
+  gfBodyHint: { fontSize: 11, textAlign: 'center', marginTop: 8 },
+  gfBailoutBody: { padding: 16, gap: 10 },
+  gfBailoutValueRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  gfBailoutBadge: {
+    backgroundColor: '#CC4400', borderRadius: 6,
+    paddingHorizontal: 8, paddingVertical: 4,
+  },
+  gfBailoutBadgeText: { color: '#fff', fontSize: 11, fontWeight: '700', letterSpacing: 0.5 },
+  gfBailoutValue: { fontSize: 26, fontWeight: '700' },
+  gfBailoutDesc: { fontSize: 12, lineHeight: 18 },
   icdBox: { borderRadius: 8, padding: 12, marginTop: 8, gap: 4 },
   icdTitle: { fontSize: 13, fontWeight: '700' },
   icdItem:  { fontSize: 12 },
