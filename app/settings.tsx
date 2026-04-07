@@ -139,6 +139,26 @@ export default function SettingsScreen() {
         <Text style={[styles.hintText, { color: theme.textMuted }]}>{t('settings_ppo2_work_hint')}</Text>
       </View>
 
+      <SectionHeader title={t('settings_rates')} />
+      <View style={[styles.card, { backgroundColor: theme.surface }]}>
+        <View style={styles.pickerRow}>
+          <DrumRollPicker
+            label={t('settings_ascent')}
+            items={ASCENT_ITEMS}
+            value={ascentRate}
+            onChange={setAscentRate}
+          />
+          <View style={[styles.divider, { backgroundColor: theme.border }]} />
+          <DrumRollPicker
+            label={t('settings_descent')}
+            items={DESCENT_ITEMS}
+            value={descentRate}
+            onChange={setDescentRate}
+          />
+        </View>
+        <Text style={[styles.hintText, { color: theme.textMuted }]}>{t('settings_ascent_hint')}</Text>
+      </View>
+
       <SectionHeader title={t('settings_gf')} subtitle={t('settings_gf_subtitle')} />
       <View style={[styles.card, { backgroundColor: theme.surface }]}>
         <GasSlider label={`GF Low: ${(gfLow * 100).toFixed(0)}%`} value={gfLow} onChange={(v) => setGfLow(Math.min(v, gfHigh))} min={0.1} max={gfHigh} step={0.05} />
@@ -181,26 +201,6 @@ export default function SettingsScreen() {
           onChange={store.setAirComposition}
           labels={{ precise: t('settings_air_precise'), approximate: t('settings_air_approx') }}
         />
-      </View>
-
-      <SectionHeader title={t('settings_rates')} />
-      <View style={[styles.card, { backgroundColor: theme.surface }]}>
-        <View style={styles.pickerRow}>
-          <DrumRollPicker
-            label={t('settings_ascent')}
-            items={ASCENT_ITEMS}
-            value={ascentRate}
-            onChange={setAscentRate}
-          />
-          <View style={[styles.divider, { backgroundColor: theme.border }]} />
-          <DrumRollPicker
-            label={t('settings_descent')}
-            items={DESCENT_ITEMS}
-            value={descentRate}
-            onChange={setDescentRate}
-          />
-        </View>
-        <Text style={[styles.hintText, { color: theme.textMuted }]}>{t('settings_ascent_hint')}</Text>
       </View>
 
       <SectionHeader title={t('settings_appearance')} />
