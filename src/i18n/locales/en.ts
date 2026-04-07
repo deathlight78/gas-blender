@@ -245,109 +245,94 @@ export const en = {
   // Info modal
   info_close: 'Close',
 
-  info_blending_title: 'Blending Formulas',
+  info_blending_title: 'Blending Guide',
   info_blending_content:
-    '[ OC Partial Pressure Blending ]\n\n' +
-    '▸ He fill pressure\n' +
-    '  ΔP_He = P_target×fHe_target − P_cur×fHe_cur\n\n' +
-    '▸ O₂ fill pressure\n' +
-    '  ΔP_O₂ = P_target×fO₂_target − P_cur×fO₂_cur\n\n' +
-    '▸ Air top-up (with O₂ correction)\n' +
-    '  ΔP_air = P_target − P_cur − ΔP_He − ΔP_O₂\n' +
-    '  ※ Corrects for O₂ fraction in air top-up\n\n' +
-    '▸ Fill order: He → O₂ → Air\n\n' +
-    '─────────────────────────\n' +
-    '[ CCR Diluent Basics ]\n\n' +
-    '▸ Diluent ppO₂ at depth\n' +
-    '  ppO₂ = fO₂_dil × ATA\n' +
-    '  ATA = 1 + depth / 10\n\n' +
-    '▸ Max setpoint depth\n' +
-    '  D_sp = (SP / fO₂_dil − 1) × 10  [m]\n\n' +
-    '─────────────────────────\n' +
-    '[ CCR-1: Diluent MOD ]\n\n' +
-    '  D_mod = (1.4 / fO₂_dil − 1) × 10  [m]\n' +
-    '  Max operating depth at ppO₂ = 1.4 bar\n\n' +
-    '─────────────────────────\n' +
-    '[ CCR-2: Hypoxic Limit Depth ]\n\n' +
-    '  D_hyp = (0.16 / fO₂_dil − 1) × 10  [m]\n' +
-    '  Depth where Diluent ppO₂ = 0.16 bar\n' +
-    '  O₂ flush required above this depth\n\n' +
-    '─────────────────────────\n' +
-    '[ CCR-3: pN₂ at Max Depth ]\n\n' +
-    '  pN₂ = fN₂_dil × ATA(maxDepth)  [bar]\n' +
-    '  Narcosis ref: pN₂ > 3.2 bar ≈ air at 40m\n\n' +
-    '─────────────────────────\n' +
-    '[ CCR-4: Dual Setpoint Switch Depth ]\n\n' +
-    '  SP1 = high setpoint (bottom, e.g. 1.3 bar)\n' +
-    '  SP2 = low setpoint (ascent, e.g. 0.7 bar)\n' +
-    '  SP1→SP2 switch depth:\n' +
-    '  D_sw = (SP2 / fO₂_dil − 1) × 10  [m]\n' +
-    '  Switch to SP2 at or above this depth\n\n' +
-    '─────────────────────────\n' +
-    '[ CCR-5: O₂ Consumption Estimate ]\n\n' +
-    '  VO₂ = 0.5 L/min (metabolic standard)\n' +
-    '  O₂_consumed = VO₂ × T  [L]\n' +
-    '  Pressure drop = O₂_consumed / tank_vol  [bar]',
+    '◆ What This Tab Does\n\n' +
+    'Enter your current cylinder pressure and target mix to calculate exactly how much helium, oxygen, and air to add. Supports both OC (open-circuit) and CCR (closed-circuit rebreather) modes.\n\n' +
+    '──────────────────────\n\n' +
+    '◆ OC Partial Pressure Blending\n\n' +
+    'Gases are added in order: He → O₂ → Air. Each step fills the pressure difference needed to reach the target mix, with automatic correction for the O₂ fraction already in the air top-up.\n\n' +
+    'Why fill order matters: Helium first disperses blending heat. Oxygen in the middle is diluted before air is added, keeping O₂ concentration safe at the fill whip.\n\n' +
+    '──────────────────────\n\n' +
+    '◆ CCR — Setpoint & Diluent\n\n' +
+    'A CCR automatically blends Diluent gas with pure O₂ to maintain a constant target O₂ partial pressure (Setpoint). Enter your Diluent mix and Setpoint to get five safety metrics:\n\n' +
+    '① Diluent MOD: The deepest depth where the Diluent\'s own O₂ stays below 1.4 bar. Your planned depth must be shallower.\n\n' +
+    '② Hypoxic Limit: As you ascend, Diluent ppO₂ drops. Below 0.16 bar, blackout risk rises — O₂ flush is required above this depth.\n\n' +
+    '③ pN₂ at Max Depth: Nitrogen partial pressure at your planned depth. Above 3.2 bar equals the narcotic effect of air at 40m — the key reason for using Trimix.\n\n' +
+    '④ Dual Setpoint Switch Depth: Use a high SP1 (e.g. 1.3 bar) on the bottom for metabolic efficiency, then switch to a lower SP2 (e.g. 0.7 bar) on ascent to reduce O₂ toxicity risk. This shows the depth to make that switch.\n\n' +
+    '⑤ O₂ Consumption Estimate: A CCR replenishes only the O₂ metabolically consumed. Using the standard rate of 0.5 L/min, this estimates total O₂ used and the resulting pressure drop in your O₂ cylinder.',
 
-  info_calculator_title: 'Gas Info Formulas',
+  info_calculator_title: 'Gas Analysis Guide',
   info_calculator_content:
-    '[ MOD (Maximum Operating Depth) ]\n\n' +
-    '  D_mod = (ppO₂_limit / fO₂ − 1) × 10  [m]\n\n' +
-    '─────────────────────────\n' +
-    '[ Best Mix ]\n\n' +
-    '  fO₂_best = ppO₂_work / ATA(depth)\n' +
-    '  ATA = 1 + depth / 10\n\n' +
-    '─────────────────────────\n' +
-    '[ EAD (Equivalent Air Depth) ]\n\n' +
-    '  D_ead = (fN₂ / fN₂_air × (D+10)) − 10  [m]\n' +
-    '  ※ fN₂_air = 0.79 or 0.781 (settings)\n\n' +
-    '─────────────────────────\n' +
-    '[ END (Equivalent Narcotic Depth) ]\n\n' +
-    '  D_end = (1 − fHe) × (D+10) − 10  [m]\n' +
-    '  ※ He assumed non-narcotic',
+    '◆ What This Tab Does\n\n' +
+    'Enter a gas mix and depth to instantly check the key metrics needed for oxygen toxicity management and decompression planning.\n\n' +
+    '──────────────────────\n\n' +
+    '◆ MOD (Maximum Operating Depth)\n\n' +
+    'The deepest depth where your gas is safe to breathe. Exceeding the ppO₂ limit risks oxygen convulsions.\n' +
+    '• Work limit 1.4 bar — bottom phase\n' +
+    '• Deco limit 1.6 bar — decompression stops\n\n' +
+    'How to use: If your planned depth is deeper than MOD, that gas cannot be used at that depth.\n\n' +
+    '──────────────────────\n\n' +
+    '◆ Best Mix\n\n' +
+    'Calculates the ideal O₂ percentage for a target depth — the highest fraction that keeps ppO₂ exactly at the work limit. Higher O₂ means faster off-gassing and less decompression obligation.\n\n' +
+    'How to use: Decide your depth first, then find the best Nitrox blend for it.\n\n' +
+    '──────────────────────\n\n' +
+    '◆ EAD (Equivalent Air Depth)\n\n' +
+    'Converts the decompression benefit of Nitrox into a depth equivalent. The shallower the EAD relative to your actual depth, the less nitrogen you absorb.\n\n' +
+    'Example: EAN32 at 30m → EAD ≈ 26m. Plan your deco tables as if diving air to 26m.\n\n' +
+    '──────────────────────\n\n' +
+    '◆ END (Equivalent Narcotic Depth)\n\n' +
+    'Measures narcosis exposure for Trimix dives. Helium is considered non-narcotic, so higher He content means lower END and a clearer head at depth.\n\n' +
+    'How to use: Keeping END below 40m limits narcosis to the equivalent of an air dive at 40m.\n' +
+    'Formula: END = (1 − fHe) × (depth + 10) − 10',
 
-  info_gasplan_title: 'Gas Plan Formulas',
+  info_gasplan_title: 'Gas Planning Guide',
   info_gasplan_content:
-    '[ SAC Rate (Surface Air Consumption) ]\n\n' +
-    '  SAC = (P_used × V) / (ATA × T)  [L/min]\n' +
-    '  ATA = 1 + depth / 10\n\n' +
-    '─────────────────────────\n' +
-    '[ RMV (Respiratory Minute Volume) ]\n\n' +
-    '  RMV = SAC × ATA  [L/min]\n\n' +
-    '─────────────────────────\n' +
-    '[ Total Gas Consumed ]\n\n' +
-    '  gas_L = P × V  [L]\n\n' +
-    '─────────────────────────\n' +
-    '[ Gas Endurance ]\n\n' +
-    '  T = usable_gas / RMV  [min]\n' +
-    '  usable_gas = (P_cur − P_reserve) × V  [L]',
+    '◆ What This Tab Does\n\n' +
+    'Enter your SAC Rate and cylinder details to calculate available gas time per cylinder. Essential for multi-cylinder technical diving gas planning.\n\n' +
+    '──────────────────────\n\n' +
+    '◆ SAC Rate (Surface Air Consumption)\n\n' +
+    'Your personal breathing rate referenced to the surface, independent of depth. Measure it from a previous dive using pressure used, cylinder volume, depth, and time.\n\n' +
+    'Typical ranges: Beginner 15–20 · Average 12–15 · Experienced 10–12 L/min\n' +
+    'Formula: SAC = (ΔP × cylinder volume) ÷ (ATA × time)\n\n' +
+    '──────────────────────\n\n' +
+    '◆ RMV (Respiratory Minute Volume)\n\n' +
+    'Your actual gas consumption per minute at a given depth. Pressure increases with depth, so the same SAC consumes more gas the deeper you go.\n\n' +
+    'RMV = SAC × ATA  (ATA = 1 + depth ÷ 10)\n' +
+    'Example: SAC 12 L/min at 30m (4 ATA) → RMV = 48 L/min\n\n' +
+    '──────────────────────\n\n' +
+    '◆ Gas Endurance\n\n' +
+    'How long a cylinder will last, based on usable gas (current pressure minus reserve) divided by RMV.\n\n' +
+    'Usable gas = (current pressure − reserve pressure) × cylinder volume [L]\n' +
+    'Endurance = usable gas ÷ RMV [min]\n\n' +
+    'How to use: Each cylinder can have its own depth and reserve settings — useful for planning stage or deco cylinder usage separately from your back gas.',
 
-  info_deco_title: 'Deco Algorithm',
+  info_deco_title: 'Deco Planning Guide',
   info_deco_content:
-    '[ Bühlmann ZHL-16C ]\n\n' +
-    '  16 tissue compartments, t½ 4–635 min\n\n' +
-    '─────────────────────────\n' +
-    '[ Schreiner Equation (tissue loading) ]\n\n' +
-    '  P_t = P_alv + (P₀ − P_alv) × e^(−λ×t)\n' +
-    '  λ = ln2 / t½\n' +
-    '  P_alv = (P_amb − 0.0627) × fGas\n\n' +
-    '─────────────────────────\n' +
-    '[ GF Ceiling ]\n\n' +
-    '  M-value: P_limit = a + P_t / b\n' +
-    '  GF interpolation: gf = GFlow + (GFhigh−GFlow)\n' +
-    '                    × (depth−firstStop) / firstStop\n' +
-    '  Ceiling = (P_t − a×GF) / (GF/b − 1)\n\n' +
-    '─────────────────────────\n' +
-    '[ ICD (Isobaric Counter-Diffusion) ]\n\n' +
-    '  ΔfN₂ > 0.5% on gas switch → warning\n\n' +
-    '─────────────────────────\n' +
-    '[ CNS% (CNS O₂ Toxicity) ]\n\n' +
-    '  NOAA table limits per ppO₂\n' +
-    '  CNS% = Σ (Δt / limit(ppO₂)) × 100\n\n' +
-    '─────────────────────────\n' +
-    '[ OTU (Pulmonary O₂ Toxicity) ]\n\n' +
-    '  OTU/min = ((ppO₂ − 0.5) / 0.5)^0.83\n' +
-    '  (Repex formula, ppO₂ > 0.5 bar)',
+    '◆ What This Tab Does\n\n' +
+    'Enter your depth, bottom time, gas, and GF settings. The app uses the Bühlmann ZHL-16C algorithm to generate a decompression stop table and calculate cumulative oxygen toxicity (CNS% and OTU). Multiple deco gas switches are supported.\n\n' +
+    '──────────────────────\n\n' +
+    '◆ Bühlmann ZHL-16C Algorithm\n\n' +
+    'Simulates nitrogen absorption and release across 16 body tissue compartments (blood, fat, bone, etc.), each with a different half-time (4–635 min). Ascending too fast causes dissolved nitrogen to form bubbles — decompression sickness. The algorithm calculates the slowest allowable ascent rate and required stops so no tissue exceeds its safe limit.\n\n' +
+    '──────────────────────\n\n' +
+    '◆ Gradient Factor (GF)\n\n' +
+    'Two numbers that control how conservative the decompression model is. Lower = more conservative (longer stops), higher = more aggressive (shorter stops).\n' +
+    '• GF Low: Sets the depth of the first deco stop. Lower values start stops deeper.\n' +
+    '• GF High: Sets the ceiling limit at the last stop before surfacing.\n' +
+    '• Reference: GUE default 30/85 · Conservative 20/70 · Aggressive 80/100\n\n' +
+    '──────────────────────\n\n' +
+    '◆ Multi-Gas Deco Switches\n\n' +
+    'Switching to a higher-O₂ gas at a given depth accelerates nitrogen off-gassing and shortens decompression. Set the switch depth to the deepest point where that gas keeps ppO₂ below the deco limit (default 1.6 bar).\n\n' +
+    '──────────────────────\n\n' +
+    '◆ ICD (Isobaric Counter-Diffusion) Warning\n\n' +
+    'When switching from a helium-rich gas to a high-O₂ deco gas, the N₂ partial pressure can suddenly rise — potentially causing bubbles even without ascending. Flagged when ΔfN₂ exceeds 0.5%.\n\n' +
+    '──────────────────────\n\n' +
+    '◆ Bailout Mode\n\n' +
+    'For CCR divers who must switch to OC in an emergency. Applies a separate, more conservative Bailout GF to add a safety margin. Configure your Bailout GF in the Settings tab.\n\n' +
+    '──────────────────────\n\n' +
+    '◆ CNS% & OTU (Oxygen Toxicity)\n\n' +
+    '• CNS% — Central nervous system toxicity. Risk of convulsions above 80%. Keep below 80% per dive.\n' +
+    '• OTU — Pulmonary oxygen toxicity units. Risk of lung damage above 300. Keep below 300 per day.',
 
   // Disclaimer
   disclaimer_title: '⚠️ Important Safety Notice',
