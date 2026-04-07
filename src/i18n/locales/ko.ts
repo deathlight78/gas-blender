@@ -242,6 +242,25 @@ export const ko = {
   gplan_usable_gas: '사용 가능 기체량',
   gplan_time: '예상 사용 시간',
 
+  // 다이빙 세션
+  session_title: '다이빙 세션',
+  session_subtitle: '연속 다이빙 OTU · CNS% 누적 추적',
+  session_empty: '"세션에 추가"를 탭하면 이 다이빙이 세션에 기록됩니다',
+  session_add: '이 다이빙을 세션에 추가',
+  session_clear: '세션 초기화',
+  session_clear_confirm: '모든 다이빙 기록을 삭제하시겠습니까?',
+  session_surface_interval: '수면 휴식',
+  session_dive_n: '다이빙 {n}',
+  session_cumulative: '세션 누적',
+  session_this_dive: '이번',
+  session_prev: '이전',
+  session_total: '합계',
+  session_total_cns: 'CNS% (회복 반영)',
+  session_remove: '삭제',
+  session_status_banner: '세션 누적 — OTU {otu} · CNS {cns}% ({count}회)',
+  session_otu_pct: '하루 OTU 한도({limit})의 {pct}%',
+  session_otu_warning: '⚠ OTU {otu} — 하루 한도 {pct}% 달성',
+
   // 인포 모달
   info_close: '닫기',
 

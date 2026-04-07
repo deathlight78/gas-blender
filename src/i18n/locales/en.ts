@@ -242,6 +242,25 @@ export const en = {
   gplan_usable_gas: 'Usable Gas',
   gplan_time: 'Est. Duration',
 
+  // Dive session
+  session_title: 'Dive Session',
+  session_subtitle: 'Cumulative OTU · CNS% tracking across dives',
+  session_empty: 'Tap "Add to Session" to record this dive',
+  session_add: 'Add This Dive to Session',
+  session_clear: 'Clear Session',
+  session_clear_confirm: 'Delete all dive records from this session?',
+  session_surface_interval: 'Surface Interval',
+  session_dive_n: 'Dive {n}',
+  session_cumulative: 'Session Totals',
+  session_this_dive: 'This dive',
+  session_prev: 'Previous',
+  session_total: 'Total',
+  session_total_cns: 'CNS% (with recovery)',
+  session_remove: 'Remove',
+  session_status_banner: 'Session — OTU {otu} · CNS {cns}% ({count} dives)',
+  session_otu_pct: '{pct}% of daily OTU limit ({limit})',
+  session_otu_warning: '⚠ OTU {otu} — {pct}% of daily limit reached',
+
   // Info modal
   info_close: 'Close',
 

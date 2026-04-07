@@ -12,6 +12,9 @@ import { planDeco } from '../src/lib/deco/deco-planner';
 import { DecoResult, DecoInput } from '../src/types/deco.types';
 import { GasMix } from '../src/types/gas.types';
 import { useSettingsStore } from '../src/store/settings.store';
+import { useSessionStore } from '../src/store/session.store';
+import { calcSessionCarryover } from '../src/lib/deco/cns-recovery';
+import SessionPanel from '../src/components/deco/SessionPanel';
 import { useAppTheme } from '../src/context/ThemeContext';
 import { useTranslation } from '../src/i18n';
 
@@ -60,6 +63,9 @@ export default function DecoScreen() {
 
   const [result, setResult] = useState<DecoResult | null>(null);
   const [bottomRunTime, setBottomRunTime] = useState(0);
+
+  const { entries, addEntry } = useSessionStore();
+  const carryover = calcSessionCarryover(entries);
 
   function toM(v: number) { return depthUnit === 'ft' ? v * 0.3048 : v; }
 
@@ -288,6 +294,19 @@ export default function DecoScreen() {
         )}
       </View>
 
+      {/* ── 세션 누적 상태 배너 (세션에 다이빙이 있을 때만) ── */}
+      {entries.length > 0 && (
+        <View style={[styles.sessionBanner, { backgroundColor: theme.surface, borderColor: theme.accent }]}>
+          <Text style={[styles.sessionBannerText, { color: theme.accent }]}>
+            {t('session_status_banner', {
+              otu:   carryover.otu.toFixed(0),
+              cns:   carryover.cns.toFixed(1),
+              count: String(entries.length),
+            })}
+          </Text>
+        </View>
+      )}
+
       {/* ── 계산 버튼 ── */}
       <TouchableOpacity style={[styles.calcBtn, { backgroundColor: theme.buttonPrimary }]} onPress={calculate}>
         <Text style={[styles.calcBtnText, { color: theme.buttonPrimaryText }]}>{t('deco_calc')}</Text>
@@ -371,8 +390,84 @@ export default function DecoScreen() {
               </Text>
             </View>
           )}
+
+          {/* ── 세션 누적 카드 ── */}
+          {(() => {
+            const totalOtu = carryover.otu + result.maxOtu;
+            const totalCns = carryover.cns + result.maxCns;
+            const otuPct   = Math.min(100, (totalOtu / 300) * 100);
+            const barColor = totalOtu > 270 ? '#CC2200' : totalOtu > 200 ? '#CC8800' : '#22AA55';
+            return (
+              <View style={[styles.cumulativeCard, { backgroundColor: theme.surface }]}>
+                <Text style={[styles.cumulativeTitle, { color: theme.text }]}>{t('session_cumulative')}</Text>
+                {/* OTU 행 */}
+                <View style={styles.cumRow}>
+                  <View style={styles.cumCell}>
+                    <Text style={[styles.cumCellLabel, { color: theme.textMuted }]}>{t('session_prev')}</Text>
+                    <Text style={[styles.cumCellVal, { color: theme.textSecondary }]}>{carryover.otu.toFixed(0)}</Text>
+                  </View>
+                  <Text style={[styles.cumOp, { color: theme.textMuted }]}>+</Text>
+                  <View style={styles.cumCell}>
+                    <Text style={[styles.cumCellLabel, { color: theme.textMuted }]}>{t('session_this_dive')}</Text>
+                    <Text style={[styles.cumCellVal, { color: theme.text }]}>{result.maxOtu.toFixed(0)}</Text>
+                  </View>
+                  <Text style={[styles.cumOp, { color: theme.textMuted }]}>=</Text>
+                  <View style={styles.cumCell}>
+                    <Text style={[styles.cumCellLabel, { color: theme.textMuted }]}>{t('session_total')} OTU</Text>
+                    <Text style={[styles.cumCellVal, { color: barColor, fontWeight: '700' }]}>{totalOtu.toFixed(0)}</Text>
+                  </View>
+                </View>
+                {/* OTU 바 */}
+                <View style={[styles.cumOtuBarBg, { backgroundColor: theme.surfaceAlt }]}>
+                  <View style={[styles.cumOtuBarFill, { width: `${otuPct}%`, backgroundColor: barColor }]} />
+                </View>
+                <Text style={[styles.cumOtuCaption, { color: theme.textMuted }]}>
+                  {t('session_otu_pct', { pct: String(Math.round(otuPct)), limit: '300' })}
+                </Text>
+                {/* CNS 행 */}
+                <View style={[styles.cumRow, { marginTop: 4 }]}>
+                  <View style={styles.cumCell}>
+                    <Text style={[styles.cumCellLabel, { color: theme.textMuted }]}>{t('session_prev')}</Text>
+                    <Text style={[styles.cumCellVal, { color: theme.textSecondary }]}>{carryover.cns.toFixed(1)}%</Text>
+                  </View>
+                  <Text style={[styles.cumOp, { color: theme.textMuted }]}>+</Text>
+                  <View style={styles.cumCell}>
+                    <Text style={[styles.cumCellLabel, { color: theme.textMuted }]}>{t('session_this_dive')}</Text>
+                    <Text style={[styles.cumCellVal, { color: theme.text }]}>{result.maxCns.toFixed(1)}%</Text>
+                  </View>
+                  <Text style={[styles.cumOp, { color: theme.textMuted }]}>=</Text>
+                  <View style={styles.cumCell}>
+                    <Text style={[styles.cumCellLabel, { color: theme.textMuted }]}>{t('session_total')} CNS%</Text>
+                    <Text style={[styles.cumCellVal, { color: totalCns > 80 ? '#CC2200' : theme.accent, fontWeight: '700' }]}>{totalCns.toFixed(1)}%</Text>
+                  </View>
+                </View>
+              </View>
+            );
+          })()}
+
+          {/* ── 세션에 추가 버튼 ── */}
+          <TouchableOpacity
+            style={[styles.addSessionBtn, { backgroundColor: theme.accent }]}
+            onPress={() => {
+              addEntry({
+                depth:              toM(targetDepth),
+                bottomTime,
+                tts:                result.tts,
+                totalDecoTime:      result.totalDecoTime,
+                diveOtu:            result.maxOtu,
+                diveCns:            result.maxCns,
+                surfaceIntervalMin: 60,
+              });
+            }}
+          >
+            <Text style={[styles.addSessionBtnText, { color: '#fff' }]}>{t('session_add')}</Text>
+          </TouchableOpacity>
         </>
       )}
+
+      {/* ── 다이빙 세션 ── */}
+      <SectionHeader title={t('session_title')} subtitle={t('session_subtitle')} />
+      <SessionPanel />
 
       <View style={[styles.disclaimer, { backgroundColor: theme.warningBg }]}>
         <Text style={[styles.disclaimerText, { color: theme.warningText }]}>{t('deco_disclaimer')}</Text>
@@ -473,4 +568,35 @@ const styles = StyleSheet.create({
   warningText: { fontSize: 13 },
   disclaimer:  { borderRadius: 8, padding: 12, marginTop: 16 },
   disclaimerText: { fontSize: 12, lineHeight: 18 },
+
+  // 세션 배너
+  sessionBanner: {
+    borderWidth: 1.5, borderRadius: 10,
+    paddingHorizontal: 14, paddingVertical: 10,
+    marginBottom: 8,
+  },
+  sessionBannerText: { fontSize: 13, fontWeight: '600' },
+
+  // 세션 누적 카드
+  cumulativeCard: {
+    borderRadius: 12, padding: 14, marginTop: 8,
+    shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 6, elevation: 2,
+    gap: 8,
+  },
+  cumulativeTitle: { fontSize: 14, fontWeight: '700' },
+  cumRow: { flexDirection: 'row', alignItems: 'center' },
+  cumCell: { flex: 1, alignItems: 'center' },
+  cumCellLabel: { fontSize: 10, marginBottom: 2 },
+  cumCellVal: { fontSize: 16, fontWeight: '600' },
+  cumOp: { fontSize: 16, paddingHorizontal: 4 },
+  cumOtuBarBg: { height: 8, borderRadius: 4, overflow: 'hidden' },
+  cumOtuBarFill: { height: '100%', borderRadius: 4 },
+  cumOtuCaption: { fontSize: 11, textAlign: 'right' },
+
+  // 세션에 추가 버튼
+  addSessionBtn: {
+    borderRadius: 12, paddingVertical: 14,
+    alignItems: 'center', marginTop: 10,
+  },
+  addSessionBtnText: { fontSize: 15, fontWeight: '700' },
 });

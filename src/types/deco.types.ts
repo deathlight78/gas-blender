@@ -72,6 +72,25 @@ export interface HypoxicWarning {
   ppO2: number;
 }
 
+/** 세션 내 단일 다이빙 기록 */
+export interface SessionEntry {
+  id: string;
+  /** 목표 수심 (m) */
+  depth: number;
+  /** 바닥 시간 (min) */
+  bottomTime: number;
+  /** TTS — Time To Surface (min) */
+  tts: number;
+  /** 총 감압 시간 (min) */
+  totalDecoTime: number;
+  /** 이 다이빙에서 누적된 OTU */
+  diveOtu: number;
+  /** 이 다이빙에서 누적된 CNS% */
+  diveCns: number;
+  /** 이 다이빙 이후 다음 다이빙 전까지의 수면 휴식 시간 (min) */
+  surfaceIntervalMin: number;
+}
+
 /** 감압 계획 결과 */
 export interface DecoResult {
   stops: DecoStop[];
