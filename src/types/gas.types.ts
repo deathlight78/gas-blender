@@ -5,7 +5,7 @@ export interface GasMix {
   fN2: number;  // 질소 비율 (= 1 - fO2 - fHe)
 }
 
-/** 탱크 상태 */
+/** 실린더 상태 */
 export interface Tank {
   id: string;
   name: string;

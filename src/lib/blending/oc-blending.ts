@@ -17,7 +17,7 @@ export function calcOCBlend(input: OCBlendInput): OCBlendResult {
     warnings.push('blend_err_target_pressure');
   }
 
-  // 현재 탱크 기체 절대량 (bar)
+  // 현재 실린더 기체 절대량 (bar)
   const currentO2 = currentMix.fO2 * currentPressure;
   const currentHe = currentMix.fHe * currentPressure;
 

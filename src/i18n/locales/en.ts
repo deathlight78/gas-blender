@@ -329,7 +329,7 @@ export const en = {
   info_deco_title: 'Deco Planning Guide',
   info_deco_content:
     '◆ What This Tab Does\n\n' +
-    'Enter your depth, bottom time, gas, and GF settings. The app uses the Bühlmann ZHL-16C algorithm to generate a decompression stop table and calculate cumulative oxygen toxicity (CNS% and OTU). Multiple deco gas switches are supported.\n\n' +
+    'Enter your depth, bottom time, gas, and GF settings. The app uses the Bühlmann ZHL-16C algorithm to generate a decompression stop table and calculate cumulative oxygen toxicity (CNS% and OTU). Multiple deco gas switches and multi-dive session tracking are supported.\n\n' +
     '──────────────────────\n\n' +
     '◆ Bühlmann ZHL-16C Algorithm\n\n' +
     'Simulates nitrogen absorption and release across 16 body tissue compartments (blood, fat, bone, etc.), each with a different half-time (4–635 min). Ascending too fast causes dissolved nitrogen to form bubbles — decompression sickness. The algorithm calculates the slowest allowable ascent rate and required stops so no tissue exceeds its safe limit.\n\n' +
@@ -339,19 +339,24 @@ export const en = {
     '• GF Low: Sets the depth of the first deco stop. Lower values start stops deeper.\n' +
     '• GF High: Sets the ceiling limit at the last stop before surfacing.\n' +
     '• Reference: GUE default 30/85 · Conservative 20/70 · Aggressive 80/100\n\n' +
+    'Use the [Normal Plan] / [⚠ Bailout] tabs at the top of the GF section to switch modes. Bailout mode applies the Bailout GF from Settings — intended for CCR emergency OC switch scenarios.\n\n' +
     '──────────────────────\n\n' +
-    '◆ Multi-Gas Deco Switches\n\n' +
-    'Switching to a higher-O₂ gas at a given depth accelerates nitrogen off-gassing and shortens decompression. Set the switch depth to the deepest point where that gas keeps ppO₂ below the deco limit (default 1.6 bar).\n\n' +
+    '◆ Deco Gases (Numbered Cylinders)\n\n' +
+    'Added gases are numbered Cylinder 1, 2, 3... Each card shows the ppO₂ and N₂% at the switch depth so you can verify safety at a glance.\n\n' +
+    'Higher-O₂ gases at shallow stops accelerate off-gassing and shorten deco. Set the switch depth to the deepest point where ppO₂ stays below the deco limit (default 1.6 bar).\n\n' +
     '──────────────────────\n\n' +
     '◆ ICD (Isobaric Counter-Diffusion) Warning\n\n' +
     'When switching from a helium-rich gas to a high-O₂ deco gas, the N₂ partial pressure can suddenly rise — potentially causing bubbles even without ascending. Flagged when ΔfN₂ exceeds 0.5%.\n\n' +
     '──────────────────────\n\n' +
-    '◆ Bailout Mode\n\n' +
-    'For CCR divers who must switch to OC in an emergency. Applies a separate, more conservative Bailout GF to add a safety margin. Configure your Bailout GF in the Settings tab.\n\n' +
-    '──────────────────────\n\n' +
     '◆ CNS% & OTU (Oxygen Toxicity)\n\n' +
     '• CNS% — Central nervous system toxicity. Risk of convulsions above 80%. Keep below 80% per dive.\n' +
-    '• OTU — Pulmonary oxygen toxicity units. Risk of lung damage above 300. Keep below 300 per day.',
+    '• OTU — Pulmonary oxygen toxicity units. Risk of lung damage above 300. Keep below 300 per day.\n\n' +
+    '──────────────────────\n\n' +
+    '◆ Dive Session (Multi-Dive OTU Tracking)\n\n' +
+    'After calculating, tap "Add This Dive to Session" to log the dive\'s OTU and CNS%. On the next dive calculation, cumulative OTU and recovered CNS% are shown automatically.\n\n' +
+    '• Set the surface interval between dives: CNS% recovers exponentially (half-life 90 min).\n' +
+    '• OTU accumulates all day with no recovery. Watch the 300-unit daily limit.\n' +
+    '• Session data persists after closing the app. Reset it from the session panel.',
 
   // Disclaimer
   disclaimer_title: '⚠️ Important Safety Notice',

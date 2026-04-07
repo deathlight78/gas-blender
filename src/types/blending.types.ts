@@ -2,9 +2,9 @@ import { GasMix } from './gas.types';
 
 /** OC 블렌딩 입력 */
 export interface OCBlendInput {
-  /** 현재 탱크 압력 (bar) */
+  /** 현재 실린더 압력 (bar) */
   currentPressure: number;
-  /** 현재 탱크 혼합비 */
+  /** 현재 실린더 혼합비 */
   currentMix: GasMix;
   /** 목표 최종 압력 (bar) */
   targetPressure: number;
@@ -34,10 +34,10 @@ export interface OCBlendResult {
 
 /** CCR 블렌딩 입력 */
 export interface CCRBlendInput {
-  /** Diluent 탱크 */
+  /** Diluent 실린더 */
   diluentMix: GasMix;
   diluentPressure: number;
-  /** O₂ 탱크 */
+  /** O₂ 실린더 */
   o2Pressure: number;
   /** 목표 setpoint (ppO₂, bar) */
   setpoint: number;
@@ -67,7 +67,7 @@ export interface CCRBlendResult {
   sp2SwitchDepth?: number;
   /** CCR-5: O₂ 소비량 (L). diveTimeMin 입력 시 계산 */
   o2ConsumedL?: number;
-  /** CCR-5: O₂ 탱크 압력 강하 (bar). o2TankSizeL 입력 시 계산 */
+  /** CCR-5: O₂ 실린더 압력 강하 (bar). o2TankSizeL 입력 시 계산 */
   o2PressureDrop?: number;
   warnings: string[];
 }

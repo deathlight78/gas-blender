@@ -27,16 +27,17 @@
 - `deco/buhlmann.ts` — Schreiner 방정식, 조직 포화도 업데이트, GF ceiling
 - `deco/gradient-factor.ts` — GF 보간 + 3m 정지 올림
 - `deco/oxygen-toxicity.ts` — CNS%/OTU (NOAA 표 + Repex 공식)
-- `deco/deco-planner.ts` — 감압 오케스트레이터 (multi-gas, CNS/OTU 누적, lastStopDepth, ICD 경고, 기체별 소비량)
+- `deco/deco-planner.ts` — 감압 오케스트레이터 (multi-gas, CNS/OTU 누적, lastStopDepth, ICD 경고, 저산소 경고, 기체별 소비량)
+- `deco/cns-recovery.ts` — 수면 휴식 후 CNS% 지수 회복 계산 (반감기 90min), 세션 carry-over 집계
 - `utils/ranges.ts` — buildRange(min, max, step)
 
 ### 화면 (`app/`)
 - `index.tsx` — 홈 대시보드 (기능 카드, i18n)
 - `blending.tsx` — OC / CCR 블렌딩 (탭 전환, 헤더 ⓘ 인포 버튼, CCR-1~5 결과 카드)
 - `gas-plan.tsx` — SAC Rate · RMV · 가스 사용시간 · 실린더별 계획 (수심/SAC 개별 설정, 헤더 ⓘ 인포 버튼)
-- `deco.tsx` — 감압 계획 (StepInput + GasSlider, 마지막 정지 수심 설정, RMV 입력, ICD 경고 표시, 기체별 소비량 카드, 헤더 ⓘ 인포 버튼)
+- `deco.tsx` — 감압 계획 (StepInput + GasSlider, 마지막 정지 수심, RMV, ICD/저산소 경고, 기체별 소비량, Bailout 탭 UI, 감압 기체 번호 카드, 다이빙 세션 패널)
 - `calculator.tsx` — MOD / Best Mix / EAD / END (헤더 ⓘ 인포 버튼)
-- `settings.tsx` — ppO₂ · GF · 단위 · 속도 · 언어 · 테마 · 피드백 이메일 버튼
+- `settings.tsx` — ppO₂ · 상승/하강 속도 · GF · GF Bailout · 단위 · 공기 조성 · 언어 · 테마 · 피드백 이메일
 
 ### UI 컴포넌트 (`src/components/`)
 - `ui/DrumRollPicker.tsx` — 드럼롤 피커 (PanResponder + 관성 스크롤, capture 핸들러)
@@ -45,19 +46,27 @@
 - `ui/ResultCard.tsx` — 계산 결과 카드
 - `ui/SectionHeader.tsx` — 섹션 헤더
 - `ui/NumericInput.tsx` — 단순 숫자 입력
-- `ui/InfoModal.tsx` — 탭별 알고리즘/공식 설명 모달 (헤더 ⓘ 버튼, useNavigation + useLayoutEffect)
-- `deco/HypoxicWarning` type — ppO₂ < 0.16 bar 저산소 경고 (deco.types.ts → deco-planner.ts → deco.tsx)
+- `ui/InfoModal.tsx` — 탭별 기능 설명 모달 (헤더 ⓘ 버튼, useNavigation + useLayoutEffect)
 - `ui/DisclaimerModal.tsx` — 첫 실행 면책 조항 모달
 - `blending/TankForm.tsx` — 블렌딩 실린더 폼 (DrumRollPicker)
 - `blending/BlendResult.tsx` — 블렌딩 결과 (isValid 기반 경고 분기)
 - `deco/DecoTable.tsx` — 감압 정지 테이블
 - `deco/DecoSummary.tsx` — TTS / 총감압 / CNS% / OTU 요약
+- `deco/SessionPanel.tsx` — 연속 다이빙 세션 패널 (다이빙 목록, 수면 휴식 편집, OTU 프로그레스 바)
+
+### 스토어 (`src/store/`)
+- `settings.store.ts` — ppO₂·GF·GF Bailout·단위·속도·공기 조성 (AsyncStorage 영속)
+- `app.store.ts` — 언어·테마·면책조항 동의 (AsyncStorage 영속)
+- `session.store.ts` — 연속 다이빙 세션 기록 (AsyncStorage 영속, 앱 재시작 후에도 유지)
+
+### 타입 (`src/types/`)
+- `gas.types.ts` — GasMix, DepthUnit, PressureUnit
+- `blending.types.ts` — OCBlendInput/Result, CCRBlendInput/Result + CCR-1~5 결과 타입
+- `deco.types.ts` — DecoInput, DecoResult, DecoStop, GasConsumption, IcdWarning, HypoxicWarning, **SessionEntry**
 
 ### 인프라
 - `src/i18n/` — 한국어/영어 전환 (`useTranslation` hook, `t(key, params?)`)
 - `src/context/ThemeContext.tsx` — 라이트/다크/시스템 테마
-- `src/store/settings.store.ts` — 앱 설정 영속 (AsyncStorage)
-- `src/store/app.store.ts` — 언어/테마/면책 동의 영속 (기본 테마: dark)
 - `app/+html.tsx` — PWA meta 태그 (viewport-fit=cover, manifest)
 - `public/manifest.json` — PWA manifest
 - `vercel.json` — Vercel 배포 설정
@@ -73,10 +82,12 @@
 | 순위 | 기능 | 난이도 | 핵심 변경 파일 |
 |---|---|---|---|
 | ✅ A | 최소 ppO₂ 경고 (< 0.16 bar) | 낮음 | `deco-planner.ts`, `deco.tsx` |
-| ✅ B | Bailout GF 설정 | 낮음 | `settings.store.ts`, `settings.tsx`, `deco.tsx` |
+| ✅ B | Bailout GF 설정 + 탭 UI | 낮음 | `settings.store.ts`, `settings.tsx`, `deco.tsx` |
 | ✅ CCR-1~5 | CCR 블렌딩 5종 개선 | 낮음~중간 | `ccr-blending.ts`, `blending.types.ts`, `blending.tsx` |
+| ✅ Session | 연속 다이빙 OTU/CNS% 세션 추적 | 중간 | `session.store.ts`, `SessionPanel.tsx`, `deco.tsx` |
 | C | ZHL-16B 계수 선택 | 낮음~중간 | `compartments.ts`, `settings.store.ts` |
 | D | 고도 보정 | 중간 | `deco-planner.ts` + `DecoInput` 전파 |
+| E | 조직 포화도 캐리오버 (Phase 3) | 높음 | `deco-planner.ts`, `session.store.ts` |
 
 세부 구현 현황은 `docs/GUE_DIFF.md` 참고.
 
@@ -119,3 +130,9 @@ npm install <패키지> --legacy-peer-deps
 | 마지막 정지 수심 기본값 | 6m (GUE 표준) | 3m보다 보수적, 사용자 3m/6m/9m 선택 가능 |
 | ICD 경고 임계값 | fN₂ 차이 0.5% | 부동소수점 오차 방지, 실제 위험 기준 |
 | 헤더 ⓘ 버튼 주입 | `useNavigation + useLayoutEffect` | Expo Router tabs에서 화면별 headerRight 설정 표준 방식 |
+| Bailout GF UI | GF 섹션 내 탭(일반/Bailout) 전환 | 별도 토글 행보다 맥락 명확, 탭마다 현재 GF 수치 표시 |
+| 감압 기체 카드 | 번호 뱃지 + 헤더/바디/푸터 분리 | 어떤 실린더인지 즉시 구분, 전환 수심 ppO₂ 하단 표시 |
+| 설정 탭 섹션 순서 | ppO₂ → 상승/하강 속도 → GF → GF Bailout → 단위 → 공기 조성 → 외관 | 감압 계획 흐름(독성 한계→속도→GF)과 일치 |
+| 세션 OTU carry-over | OTU 단순 누적, CNS%는 반감기 90min 지수 회복 | NOAA 기준 적용, 현실적 피로도 반영 |
+| 세션 조직 포화도 | 미구현 (Phase 2 범위 외) | 구현 복잡도 높음, 별도 Phase 3으로 분리 |
+| 세션 저장소 | Zustand + AsyncStorage (`gas-blender-dive-session`) | 앱 재시작 후에도 당일 세션 유지 |

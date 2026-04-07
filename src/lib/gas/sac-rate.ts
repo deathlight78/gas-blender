@@ -3,7 +3,7 @@ import { SURFACE_PRESSURE } from './constants';
 export interface SACInput {
   /** 사용한 기체량 (bar) */
   pressureUsed: number;
-  /** 탱크 용량 (리터) */
+  /** 실린더 용량 (리터) */
   tankVolume: number;
   /** 평균 수심 (m) */
   avgDepth: number;
@@ -43,11 +43,11 @@ export function calcSAC(input: SACInput): SACResult {
 }
 
 export interface GasEnduranceInput {
-  /** 현재 탱크 압력 (bar) */
+  /** 현재 실린더 압력 (bar) */
   currentPressure: number;
   /** 예비 압력 (bar) — 최소 잔압 */
   reservePressure: number;
-  /** 탱크 용량 (리터) */
+  /** 실린더 용량 (리터) */
   tankVolume: number;
   /** 계획 수심 (m) */
   depth: number;

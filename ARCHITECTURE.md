@@ -23,9 +23,9 @@
 | 홈 | `app/index.tsx` | 기능 대시보드 카드 |
 | 블렌딩 | `app/blending.tsx` | OC / CCR 탭 전환 블렌딩 계산 |
 | 가스 계획 | `app/gas-plan.tsx` | SAC Rate · 가스 사용시간 · 실린더별 계획 |
-| 감압 계획 | `app/deco.tsx` | Bühlmann ZHL-16C + GF 감압 계획 |
+| 감압 계획 | `app/deco.tsx` | Bühlmann ZHL-16C + GF + 다이빙 세션 |
 | 기체 분석 | `app/calculator.tsx` | MOD / Best Mix / EAD / END |
-| 설정 | `app/settings.tsx` | ppO₂ · GF · 단위 · 속도 · 언어 · 테마 |
+| 설정 | `app/settings.tsx` | ppO₂ · 속도 · GF · 단위 · 언어 · 테마 |
 
 ---
 
@@ -40,25 +40,26 @@ gas-blender/
 │   ├── blending.tsx              # 블렌딩 (OC / CCR 탭)
 │   ├── calculator.tsx            # 기체 분석 (MOD / EAD / END)
 │   ├── gas-plan.tsx              # 가스 계획 (SAC / 사용시간 / 실린더 계획)
-│   ├── deco.tsx                  # 감압 계획
+│   ├── deco.tsx                  # 감압 계획 (세션 플래너 포함)
 │   └── settings.tsx              # 앱 설정
 ├── src/
 │   ├── lib/                      # 순수 계산 로직 (UI 무관, 단위 테스트 대상)
 │   │   ├── gas/
-│   │   │   ├── constants.ts      # 표준 상수 (surface=1 bar, AIR_N2=0.79)
+│   │   │   ├── constants.ts      # 표준 상수 (surface=1 bar, AIR_N2=0.79/0.781)
 │   │   │   ├── partial-pressure.ts
 │   │   │   ├── mod.ts            # MOD, Best Mix
 │   │   │   ├── ead-end.ts        # EAD, END
 │   │   │   └── sac-rate.ts       # SAC Rate, Gas Endurance, RMV
 │   │   ├── blending/
 │   │   │   ├── oc-blending.ts    # OC 부분압 블렌딩 (공기 탑업 O₂ 보정)
-│   │   │   └── ccr-blending.ts   # CCR Diluent + setpoint 계산
+│   │   │   └── ccr-blending.ts   # CCR Diluent + setpoint + CCR-1~5
 │   │   ├── deco/
 │   │   │   ├── buhlmann.ts       # Bühlmann ZHL-16C (Schreiner 방정식)
 │   │   │   ├── compartments.ts   # 16 compartment 계수 (ZHL-16C)
-│   │   │   ├── deco-planner.ts   # 감압 오케스트레이터 (multi-gas, CNS/OTU, ICD, 기체별 소비량)
+│   │   │   ├── deco-planner.ts   # 감압 오케스트레이터 (multi-gas, CNS/OTU, ICD, 저산소 경고, 기체별 소비량)
 │   │   │   ├── gradient-factor.ts # GF 보간 + 3m 정지 올림
-│   │   │   └── oxygen-toxicity.ts # CNS% / OTU (NOAA 표 + Repex 공식)
+│   │   │   ├── oxygen-toxicity.ts # CNS% / OTU (NOAA 표 + Repex 공식)
+│   │   │   └── cns-recovery.ts   # 수면 휴식 후 CNS% 지수 회복, 세션 carry-over 집계
 │   │   └── utils/
 │   │       └── ranges.ts         # buildRange(min, max, step) 유틸
 │   ├── components/
@@ -69,14 +70,15 @@ gas-blender/
 │   │   │   ├── ResultCard.tsx    # 계산 결과 카드
 │   │   │   ├── SectionHeader.tsx # 섹션 제목 + 부제목
 │   │   │   ├── NumericInput.tsx  # 단순 숫자 텍스트 입력
-│   │   │   ├── InfoModal.tsx     # 탭별 알고리즘/공식 설명 모달 (헤더 ⓘ 버튼)
+│   │   │   ├── InfoModal.tsx     # 탭별 기능/알고리즘 설명 모달 (헤더 ⓘ 버튼)
 │   │   │   └── DisclaimerModal.tsx # 첫 실행 면책 조항 모달
 │   │   ├── blending/
 │   │   │   ├── TankForm.tsx      # 블렌딩 실린더 입력 폼
 │   │   │   └── BlendResult.tsx   # 블렌딩 결과 (주입 순서 · 검증)
 │   │   └── deco/
 │   │       ├── DecoTable.tsx     # 감압 정지 테이블
-│   │       └── DecoSummary.tsx   # TTS / 총감압 / CNS% / OTU 요약 카드
+│   │       ├── DecoSummary.tsx   # TTS / 총감압 / CNS% / OTU 요약 카드
+│   │       └── SessionPanel.tsx  # 연속 다이빙 세션 패널 (OTU 누적 추적)
 │   ├── context/
 │   │   └── ThemeContext.tsx      # 라이트/다크/시스템 테마 컨텍스트
 │   ├── i18n/
@@ -85,12 +87,14 @@ gas-blender/
 │   │       ├── ko.ts             # 한국어 번역
 │   │       └── en.ts             # 영어 번역
 │   ├── store/
-│   │   ├── settings.store.ts     # ppO₂·GF·단위·속도·공기 조성 (AsyncStorage 영속)
-│   │   └── app.store.ts          # 언어·테마·면책조항 동의 (AsyncStorage 영속)
+│   │   ├── settings.store.ts     # ppO₂·GF·GF Bailout·단위·속도·공기 조성 (AsyncStorage 영속)
+│   │   ├── app.store.ts          # 언어·테마·면책조항 동의 (AsyncStorage 영속)
+│   │   └── session.store.ts      # 연속 다이빙 세션 기록 (AsyncStorage 영속)
 │   └── types/
-│       ├── gas.types.ts          # GasMix, Tank, DepthUnit, PressureUnit
+│       ├── gas.types.ts          # GasMix, DepthUnit, PressureUnit
 │       ├── blending.types.ts     # OCBlendInput/Result, CCRBlendInput/Result
-│       └── deco.types.ts         # DecoInput, DecoResult, DecoStop, GasConsumption, IcdWarning
+│       └── deco.types.ts         # DecoInput, DecoResult, DecoStop, GasConsumption,
+│                                 # IcdWarning, HypoxicWarning, SessionEntry
 ├── public/                       # PWA 에셋
 │   ├── manifest.json
 │   └── icon-*.png
@@ -116,11 +120,20 @@ gas-blender/
     ↓
 로컬 useState (화면 단위 임시 상태)
     ↓
-lib/ 순수 계산 함수 (useMemo로 실시간 계산)
+lib/ 순수 계산 함수
     ↓
 결과 렌더링 (ResultCard / DecoTable / DecoSummary)
 
-설정값은 Zustand store → AsyncStorage 영속
+영속 상태:
+  settings.store  → AsyncStorage (ppO₂, GF, 단위 등 앱 설정)
+  app.store       → AsyncStorage (언어, 테마, 면책 동의)
+  session.store   → AsyncStorage (연속 다이빙 세션 기록)
+
+세션 carry-over 흐름:
+  session.store.entries
+    → calcSessionCarryover() [cns-recovery.ts]
+    → carryover { otu, cns }
+    → deco.tsx 결과 누적 카드 + 세션 배너에 표시
 ```
 
 ---
@@ -134,9 +147,10 @@ P_O2_add  = fO2_target × P_final − fO2_current × P_current − airO2 × P_ai
 P_air_add = P_final − P_current − P_He_add − P_O2_add
 ```
 
-### MOD
+### MOD / Best Mix
 ```
-MOD (m) = (ppO2_limit / fO2 − 1) × 10
+MOD (m)    = (ppO2_limit / fO2 − 1) × 10
+Best Mix   = ppO2_work / ATA(depth)
 ```
 
 ### EAD / END
@@ -148,9 +162,9 @@ END = (1 − fHe) × (depth + 10) − 10
 ### SAC Rate / RMV / Gas Endurance
 ```
 SAC (L/min) = pressureUsed × tankVolume / ((avgDepth/10 + 1) × diveTime)
-RMV (L/min) = SAC × (depth/10 + 1)   ← 해당 수심 실제 분당 호흡량
+RMV (L/min) = SAC × (depth/10 + 1)
 usableGas   = (currentPressure − reservePressure) × tankVolume
-endurance   = usableGas / (SAC × (depth/10 + 1))
+endurance   = usableGas / RMV
 ```
 
 ### Bühlmann ZHL-16C (Schreiner 방정식)
@@ -162,19 +176,31 @@ P_alv = (P_amb − 0.0627) × fGas
 
 ### GF 기반 허용 상한
 ```
-Ceiling = (P_t − GF_lo × b) / (GF_lo / a − 1)
+Ceiling = (P_t − GF × a) / (GF / b − 1)
 GF 보간: GF(depth) = GF_lo + (GF_hi − GF_lo) × (firstStop − depth) / firstStop
 ```
 
 ### 감압 계획 고급 기능
 - **마지막 정지 수심**: 기본 6m (GUE 표준), 사용자 설정 가능 (3m/6m/9m)
-- **ICD 경고**: 가스 전환 시 신규 기체의 fN₂ > 이전 기체 fN₂ + 0.005 이면 경고 (역방향 N₂ 증가 = 버블 리스크)
-- **기체별 소비량**: `gasUsed = RMV × ATA × stopTime`, 기체 레이블 기준으로 집계 후 표시
+- **ICD 경고**: 가스 전환 시 신규 기체의 fN₂ > 이전 기체 fN₂ + 0.005이면 경고
+- **저산소 경고**: 전환 수심에서 ppO₂ < 0.16 bar이면 경고
+- **기체별 소비량**: `gasUsed = RMV × ATA × stopTime`, 기체 레이블 기준 집계
 
 ### CCR Diluent 블렌딩
 ```
-ppO₂_at_depth  = fO₂_dil × ATA
+ppO₂_at_depth    = fO₂_dil × ATA
 maxSetpointDepth = (setpoint / fO₂_dil − 1) × 10  [m]
+diluentMOD       = (1.4 / fO₂_dil − 1) × 10       [m]
+hypoxicLimit     = (0.16 / fO₂_dil − 1) × 10      [m]
+dualSPSwitch     = (SP2 / fO₂_dil − 1) × 10       [m]
+o2Consumed       = 0.5 L/min × diveTime            [L]
+```
+
+### 세션 CNS% 회복
+```
+CNS_잔류 = CNS × 0.5^(surfaceInterval / 90)   [반감기 90분]
+carry-over OTU = Σ diveOtu  (회복 없음)
+carry-over CNS = 각 다이빙 후 회복 적용 누적
 ```
 
 ---
@@ -184,8 +210,9 @@ maxSetpointDepth = (setpoint / fO₂_dil − 1) × 10  [m]
 - **DrumRollPicker**: PanResponder 드래그 + 관성 스크롤. capture-phase 핸들러로 부모 ScrollView 터치 충돌 방지.
 - **GasSlider**: 0~1 분율 전용. −/입력/+ 버튼 + 수평 PanResponder 슬라이더.
 - **StepInput**: 범용 숫자(정수·소수). GasSlider와 동일 패턴, min/max/step/unit 프롭.
-- **InfoModal**: 각 탭 헤더 ⓘ 버튼 → 해당 탭 알고리즘/공식 설명 모달. `useNavigation + useLayoutEffect`로 헤더 우측 버튼 주입.
-- 모든 색상은 `useAppTheme()` 훅으로 주입 — 하드코딩된 색상 없음 (accent 계열 예외).
+- **InfoModal**: 각 탭 헤더 ⓘ 버튼 → 기능 설명·알고리즘·활용법 모달. `useNavigation + useLayoutEffect`로 헤더 우측 버튼 주입.
+- **SessionPanel**: 연속 다이빙 세션 목록. 다이빙별 OTU/CNS/감압 요약, 수면 휴식 +/- 편집, OTU 프로그레스 바(녹색→주황→빨강).
+- 모든 색상은 `useAppTheme()` 훅으로 주입 — 하드코딩된 색상 없음 (accent·경고색 계열 예외).
 
 ---
 
@@ -239,4 +266,8 @@ maxSetpointDepth = (setpoint / fO₂_dil − 1) × 10  [m]
 | 공기 O₂ (정밀) | 0.209 | 실제 대기 조성 |
 | 수증기압 보정 | 0.0627 bar | Bühlmann 폐포 압력 공식 적용 |
 | ICD 경고 임계값 | ΔfN₂ > 0.5% | 부동소수점 오차 방지, 실제 위험 기준 |
+| 저산소 경고 임계값 | ppO₂ < 0.16 bar | NOAA 기준 |
 | 마지막 정지 기본값 | 6m | GUE 표준 (사용자 3/6/9m 선택 가능) |
+| CNS% 회복 반감기 | 90분 | NOAA 표준 |
+| OTU 일일 한도 | 300 | 단일 노출 기준 권장값 |
+| CCR O₂ 대사 소비율 | 0.5 L/min | 안정 상태 표준값 |
