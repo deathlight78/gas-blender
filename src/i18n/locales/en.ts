@@ -336,7 +336,6 @@ export const en = {
     '──────────────────────\n\n' +
     '◆ Bühlmann ZHL-16C Algorithm\n\n' +
     'Simulates nitrogen absorption and release across 16 body tissue compartments (blood, fat, bone, etc.), each with a different half-time (5–635 min). Ascending too fast causes dissolved nitrogen to form bubbles — decompression sickness. The algorithm calculates the slowest allowable ascent rate and required stops so no tissue exceeds its safe limit.\n\n' +
-    'Compartment coefficients use standard ZHL-16C values, verified against MultiDeco 2.26 binary analysis.\n\n' +
     'Stop exit rule: the diver ascends to the next stop as soon as the GF-ceiling drops to or below the current stop depth. Accelerated helium off-gassing on gas switch is credited immediately — no unnecessary hold time (same method as MultiDeco and Shearwater).\n\n' +
     '──────────────────────\n\n' +
     '◆ Gradient Factor (GF)\n\n' +
