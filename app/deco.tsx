@@ -23,7 +23,7 @@ let nextId = 1;
 
 export default function DecoScreen() {
   const scrollRef = useRef<ScrollView>(null);
-  const { gfLow, gfHigh, gfBailoutLow, gfBailoutHigh, ascentRate, descentRate, depthUnit, airO2, airN2, ppO2Deco } = useSettingsStore();
+  const { gfLow, gfHigh, gfBailoutLow, gfBailoutHigh, ascentRate, descentRate, depthUnit, airO2, airN2, ppO2Deco, ppO2Work } = useSettingsStore();
   const theme = useAppTheme();
   const navigation = useNavigation();
 
@@ -125,6 +125,8 @@ export default function DecoScreen() {
   const mixLabel = bottomFHe > 0
     ? `Trimix ${(bottomFO2 * 100).toFixed(0)}/${(bottomFHe * 100).toFixed(0)}`
     : `EAN ${(bottomFO2 * 100).toFixed(0)}`;
+  const bottomModM    = Math.floor((ppO2Work / bottomFO2 - 1) * 10);
+  const bottomModDisp = depthUnit === 'ft' ? Math.floor(bottomModM / 0.3048) : bottomModM;
 
   return (
     <ScrollView ref={scrollRef} style={[styles.container, { backgroundColor: theme.background }]} contentContainerStyle={styles.content}>
@@ -161,7 +163,9 @@ export default function DecoScreen() {
         <GasSlider label="He %" value={bottomFHe} onChange={setBottomFHe} min={0}    max={Math.max(0, 1 - bottomFO2)}     step={0.01} />
         <View style={[styles.mixInfo, { borderTopColor: theme.surfaceAlt }]}>
           <Text style={[styles.mixLabel, { color: theme.accent }]}>{mixLabel}</Text>
-          <Text style={[styles.n2Text,  { color: theme.textMuted }]}>N₂ {(bottomN2 * 100).toFixed(0)}%</Text>
+          <Text style={[styles.n2Text,  { color: theme.textMuted }]}>
+            N₂ {(bottomN2 * 100).toFixed(0)}%{'  '}MOD {bottomModDisp}{depthUnit_label}
+          </Text>
         </View>
       </View>
 
