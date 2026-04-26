@@ -86,7 +86,7 @@ export default function StepInput({
   return (
     <View style={[styles.container, containerStyle]}>
       <Text style={[styles.label, { color: theme.textSecondary }]}>{label}</Text>
-      <View style={styles.row}>
+      <View style={[styles.row, unit ? styles.rowBottomAlign : null]}>
         <TouchableOpacity
           style={[styles.stepBtn, { backgroundColor: theme.infoBg }]}
           onPress={() => onChange(snap(value - step))}
@@ -94,13 +94,16 @@ export default function StepInput({
           <Text style={[styles.stepBtnText, { color: theme.accent }]}>−</Text>
         </TouchableOpacity>
 
-        <TextInput
-          style={[styles.input, { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text }]}
-          value={displayText}
-          onChangeText={handleTextChange}
-          keyboardType="number-pad"
-          selectTextOnFocus
-        />
+        <View style={styles.inputStack}>
+          {unit ? <Text style={[styles.unitAbove, { color: theme.textMuted }]}>{unit}</Text> : null}
+          <TextInput
+            style={[styles.input, { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text }]}
+            value={displayText}
+            onChangeText={handleTextChange}
+            keyboardType="number-pad"
+            selectTextOnFocus
+          />
+        </View>
 
         <TouchableOpacity
           style={[styles.stepBtn, { backgroundColor: theme.infoBg }]}
@@ -108,8 +111,6 @@ export default function StepInput({
         >
           <Text style={[styles.stepBtnText, { color: theme.accent }]}>+</Text>
         </TouchableOpacity>
-
-        {unit ? <Text style={[styles.unitLabel, { color: theme.textMuted }]}>{unit}</Text> : null}
       </View>
 
       <View
@@ -140,8 +141,11 @@ const styles = StyleSheet.create({
   container: { marginBottom: 14 },
   label: { fontSize: 13, fontWeight: '600', marginBottom: 8 },
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
+  rowBottomAlign: { alignItems: 'flex-end' },
   stepBtn: { width: 36, height: 36, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
   stepBtnText: { fontSize: 20, lineHeight: 24 },
+  inputStack: { alignItems: 'center' },
+  unitAbove: { fontSize: 11, fontWeight: '500', marginBottom: 3 },
   input: {
     width: 80,
     borderWidth: 1,
@@ -151,7 +155,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     paddingVertical: 6,
   },
-  unitLabel: { fontSize: 14, fontWeight: '500' },
   trackHitArea: {
     marginTop: 10,
     paddingVertical: 8,
