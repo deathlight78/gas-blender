@@ -27,7 +27,7 @@
 - `deco/buhlmann.ts` — Schreiner 방정식, 조직 포화도 업데이트, GF ceiling
 - `deco/gradient-factor.ts` — GF 보간 + 3m 정지 올림
 - `deco/oxygen-toxicity.ts` — CNS%/OTU (NOAA 표 + Repex 공식)
-- `deco/deco-planner.ts` — 감압 오케스트레이터 (multi-gas, CNS/OTU 누적, lastStopDepth, ICD 경고, 저산소 경고, 기체별 소비량, 하강 1m 단계별 조직 적분, ppO₂ 한계 기반 자동 기체 선택, 동적 첫 감압 정지 수심 탐색)
+- `deco/deco-planner.ts` — 감압 오케스트레이터 (multi-gas, CNS/OTU 누적, lastStopDepth, ICD 경고, 저산소 경고, 기체별 소비량, 하강 1m 단계별 조직 적분, ppO₂ 한계 기반 자동 기체 선택, 동적 첫 감압 정지 수심 탐색, 감압 정지 탈출 조건 ceiling ≤ currentDepth)
 - `deco/cns-recovery.ts` — 수면 휴식 후 CNS% 지수 회복 계산 (반감기 90min), 세션 carry-over 집계
 - `utils/ranges.ts` — buildRange(min, max, step)
 
@@ -142,3 +142,4 @@ npm install <패키지> --legacy-peer-deps
 | 감압 기체 전환 방식 | ppO₂ 한계 기반 자동 선택 (수동 전환 수심 없음) — MOD = `(ppO₂_limit / fO₂ − 1) × 10`, 3m 단위 내림 | 멀티데코·GUE 방식 일치, 수동 입력 오류 제거 |
 | 상승 중 기체 전환 | ppO₂ 한계 기반 MOD 도달 시 자동 전환 (바닥→첫 정지 구간 포함) | 기체 전환 시 ICD/독성 계산·소비량 정확도 보장 |
 | 첫 감압 정지 수심 결정 | 동적 탐색 — 상승 시뮬레이션으로 `ceiling ≥ 현재 수심`인 첫 수심 탐색 | 정적 방식(바닥 ceiling 올림)은 21m 에어 정지 발생, 동적 탐색으로 MultiDeco 결과와 일치 |
+| 감압 정지 탈출 조건 | `ceiling ≤ currentDepth` — ceiling이 현재 수심 이하가 되면 다음 정지로 이동 | 이전 방식(`ceiling ≤ nextStop`)은 18m EAN50 전환 후 3분 추가 대기 발생, MultiDeco/Shearwater 방식으로 수정 |
