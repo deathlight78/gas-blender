@@ -23,7 +23,7 @@
 - `gas/sac-rate.ts` — SAC Rate, Gas Endurance, RMV
 - `blending/oc-blending.ts` — OC 부분압 블렌딩 (공기 탑업 O₂ 보정, isValid 플래그)
 - `blending/ccr-blending.ts` — CCR Diluent + setpoint 계산 + CCR-1~5 (MOD / 저산소 한계 / pN₂ / Dual SP / O₂ 소비)
-- `deco/compartments.ts` — Bühlmann ZHL-16C 16 compartment 계수
+- `deco/compartments.ts` — Bühlmann ZHL-16C 16 compartment 계수 (표준 ZHL-16C, MultiDeco 2.26 바이너리 분석 검증)
 - `deco/buhlmann.ts` — Schreiner 방정식, 조직 포화도 업데이트, GF ceiling
 - `deco/gradient-factor.ts` — GF 보간 + 3m 정지 올림
 - `deco/oxygen-toxicity.ts` — CNS%/OTU (NOAA 표 + Repex 공식)
@@ -74,6 +74,7 @@
 
 ### 참고 문서
 - `docs/GUE_DIFF.md` — GUE Decoplanner vs 현 프로젝트 기능 비교 및 로드맵
+- `docs/MULTIDECO_DIFF.md` — MultiDeco 2.26 APK 바이너리 분석 결과 및 ZHL-16C 계수 검증
 
 ---
 

@@ -1,5 +1,5 @@
 /**
- * Bühlmann ZHL-16C 16 조직 계수
+ * Bühlmann ZHL-16C 16 조직 계수 (표준값 — MultiDeco 2.26 바이너리 분석으로 검증)
  * [N₂ 반감기(min), N₂ a계수(bar), N₂ b계수, He 반감기(min), He a계수(bar), He b계수]
  */
 export const ZHL16C_COMPARTMENTS = [
