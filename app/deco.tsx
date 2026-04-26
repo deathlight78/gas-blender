@@ -63,6 +63,8 @@ export default function DecoScreen() {
 
   const [result, setResult] = useState<DecoResult | null>(null);
   const [bottomRunTime, setBottomRunTime] = useState(0);
+  const [descentTimeVal, setDescentTimeVal] = useState(0);
+  const [computedBottomGas, setComputedBottomGas] = useState<GasMix>({ fO2: 0.21, fHe: 0, fN2: 0.79 });
 
   const { entries, addEntry } = useSessionStore();
   const carryover = calcSessionCarryover(entries);
@@ -89,10 +91,16 @@ export default function DecoScreen() {
       fN2: Math.max(0, 1 - bottomFO2 - bottomFHe),
     };
     const descMin = depthM / descentRate;
+    const atDepthTime = bottomTime - descMin;    // 바닥 시간(런타임) − 하강 시간 = 실제 수심 체류
+    if (atDepthTime <= 0) {
+      Alert.alert(t('error'), t('deco_err_bottom_time_short', { desc: String(Math.ceil(descMin)) }));
+      return;
+    }
+
     const input: DecoInput = {
       segments: [
-        { type: 'descent', startDepth: 0,      endDepth: depthM, time: descMin,    gas: bottomMix },
-        { type: 'bottom',  startDepth: depthM,  endDepth: depthM, time: bottomTime, gas: bottomMix },
+        { type: 'descent', startDepth: 0,     endDepth: depthM, time: descMin,      gas: bottomMix },
+        { type: 'bottom',  startDepth: depthM, endDepth: depthM, time: atDepthTime,  gas: bottomMix },
       ],
       decoGases: decoGases
         .map(dg => ({
@@ -109,7 +117,9 @@ export default function DecoScreen() {
 
     try {
       setResult(planDeco(input));
-      setBottomRunTime(Math.ceil(descMin + bottomTime));
+      setBottomRunTime(Math.ceil(bottomTime));   // 런타임 = 입력값 그대로
+      setDescentTimeVal(descMin);
+      setComputedBottomGas(bottomMix);
     } catch {
       Alert.alert(t('error'), t('deco_err_input'));
     }
@@ -136,6 +146,16 @@ export default function DecoScreen() {
           min={depthUnit === 'ft' ? 16 : 5} max={depthMax} step={depthStep} unit={depthUnit_label} />
         <StepInput label={t('deco_bottom_time')} value={bottomTime} onChange={setBottomTime}
           min={1} max={180} step={1} unit="min" />
+        {(() => {
+          const descMinDisplay = Math.ceil(toM(targetDepth) / descentRate);
+          const atDepth = bottomTime - descMinDisplay;
+          return (
+            <Text style={[styles.hintText, { color: theme.textMuted }]}>
+              {t('deco_bottom_time_hint', { desc: String(descMinDisplay) })}
+              {atDepth > 0 ? `  (${t('deco_at_depth_val', { min: String(atDepth) })})` : ''}
+            </Text>
+          );
+        })()}
       </View>
 
       {/* ── 바닥 기체 ── */}
@@ -356,7 +376,14 @@ export default function DecoScreen() {
           )}
 
           <SectionHeader title={t('deco_table')} />
-          <DecoTable stops={result.stops} bottomRunTime={bottomRunTime} ascentRate={ascentRate} />
+          <DecoTable
+              stops={result.stops}
+              bottomRunTime={bottomRunTime}
+              ascentRate={ascentRate}
+              targetDepth={toM(targetDepth)}
+              descentTime={descentTimeVal}
+              bottomGas={computedBottomGas}
+            />
 
           {/* 기체별 소비량 */}
           {result.gasConsumptions && result.gasConsumptions.length > 0 && (

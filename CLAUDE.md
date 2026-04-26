@@ -27,7 +27,7 @@
 - `deco/buhlmann.ts` — Schreiner 방정식, 조직 포화도 업데이트, GF ceiling
 - `deco/gradient-factor.ts` — GF 보간 + 3m 정지 올림
 - `deco/oxygen-toxicity.ts` — CNS%/OTU (NOAA 표 + Repex 공식)
-- `deco/deco-planner.ts` — 감압 오케스트레이터 (multi-gas, CNS/OTU 누적, lastStopDepth, ICD 경고, 저산소 경고, 기체별 소비량)
+- `deco/deco-planner.ts` — 감압 오케스트레이터 (multi-gas, CNS/OTU 누적, lastStopDepth, ICD 경고, 저산소 경고, 기체별 소비량, 하강 1m 단계별 조직 적분, 상승 중 기체 전환 수심 경유)
 - `deco/cns-recovery.ts` — 수면 휴식 후 CNS% 지수 회복 계산 (반감기 90min), 세션 carry-over 집계
 - `utils/ranges.ts` — buildRange(min, max, step)
 
@@ -35,7 +35,7 @@
 - `index.tsx` — 홈 대시보드 (기능 카드, i18n)
 - `blending.tsx` — OC / CCR 블렌딩 (탭 전환, 헤더 ⓘ 인포 버튼, CCR-1~5 결과 카드)
 - `gas-plan.tsx` — SAC Rate · RMV · 가스 사용시간 · 실린더별 계획 (수심/SAC 개별 설정, 헤더 ⓘ 인포 버튼)
-- `deco.tsx` — 감압 계획 (StepInput + GasSlider, 마지막 정지 수심, RMV, ICD/저산소 경고, 기체별 소비량, Bailout 탭 UI, 감압 기체 번호 카드, 다이빙 세션 패널)
+- `deco.tsx` — 감압 계획 (StepInput + GasSlider, 마지막 정지 수심, RMV, ICD/저산소 경고, 기체별 소비량, Bailout 탭 UI, 감압 기체 번호 카드, 다이빙 세션 패널, 런타임 기반 바닥 시간 입력 + 수심 체류 힌트)
 - `calculator.tsx` — MOD / Best Mix / EAD / END (헤더 ⓘ 인포 버튼)
 - `settings.tsx` — ppO₂ · 상승/하강 속도 · GF · GF Bailout · 단위 · 공기 조성 · 언어 · 테마 · 피드백 이메일
 
@@ -50,7 +50,7 @@
 - `ui/DisclaimerModal.tsx` — 첫 실행 면책 조항 모달
 - `blending/TankForm.tsx` — 블렌딩 실린더 폼 (DrumRollPicker)
 - `blending/BlendResult.tsx` — 블렌딩 결과 (isValid 기반 경고 분기)
-- `deco/DecoTable.tsx` — 감압 정지 테이블
+- `deco/DecoTable.tsx` — 감압 정지 테이블 (6컬럼: 수심/정지/런타임/믹스/ppO₂/EAD + 페이즈 아이콘 행: 하강/바텀/상승/정지)
 - `deco/DecoSummary.tsx` — TTS / 총감압 / CNS% / OTU 요약
 - `deco/SessionPanel.tsx` — 연속 다이빙 세션 패널 (다이빙 목록, 수면 휴식 편집, OTU 프로그레스 바)
 
@@ -94,7 +94,7 @@
 ---
 
 ## 잔여 배포 작업 (수동 필요)
-- [ ] EAS 프로젝트 ID: `eas init` → `app.json` extra.eas.projectId 입력
+- [x] EAS 프로젝트 ID: `app.json` extra.eas.projectId = `9039419d-0d06-4ec1-8bf3-fcb2d1942c8d`, owner = `lky0113`
 - [ ] Apple Developer 계정: `eas.json` submit.ios 필드 채우기
 - [ ] Google Play Service Account 키 파일 준비
 - [ ] 앱 아이콘 최종 디자인 파일 교체 (`assets/icon.png` 1024×1024)
@@ -136,3 +136,7 @@ npm install <패키지> --legacy-peer-deps
 | 세션 OTU carry-over | OTU 단순 누적, CNS%는 반감기 90min 지수 회복 | NOAA 기준 적용, 현실적 피로도 반영 |
 | 세션 조직 포화도 | 미구현 (Phase 2 범위 외) | 구현 복잡도 높음, 별도 Phase 3으로 분리 |
 | 세션 저장소 | Zustand + AsyncStorage (`gas-blender-dive-session`) | 앱 재시작 후에도 당일 세션 유지 |
+| 바닥 시간 입력 방식 | 런타임 입력 → 실제 체류 = 런타임 − 하강 시간 | GUE 플래너 기준, 하강 포함 런타임으로 직관적 계획 가능 |
+| 하강 구간 조직 적분 | 1m 간격 단계별 Schreiner 적분 | 평균 수심 단일 계산 대비 조직 포화도 정확도 향상 |
+| 감압 테이블 레이아웃 | 6컬럼(수심/정지/런타임/믹스/ppO₂/EAD) + 페이즈 아이콘 행 | 하강·바텀·상승·정지를 한 테이블에서 프로파일 전체 파악 |
+| 상승 중 기체 전환 | 바닥→첫 정지 상승 구간에서 전환 수심 경유 처리 | 기체 전환 시 ICD/독성 계산·소비량 정확도 보장 |

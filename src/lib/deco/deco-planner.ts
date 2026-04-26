@@ -174,7 +174,20 @@ export function planDeco(input: DecoInput): DecoResult {
     const ppO2     = seg.gas.fO2 * pAbs;
     const tox      = accumulateO2Toxicity(ppO2, seg.time);
 
-    state = updateCompartments(state, pAbs, seg.gas, seg.time);
+    // 하강 구간은 단계별 적분 — 평균 수심 단일 계산보다 조직 포화도를 정확히 추적
+    const distM = Math.abs(seg.endDepth - seg.startDepth);
+    if (distM > 0 && seg.time > 0) {
+      const steps    = Math.max(1, Math.ceil(distM));
+      const stepTime = seg.time / steps;
+      for (let i = 0; i < steps; i++) {
+        const frac = (i + 0.5) / steps;
+        const d    = seg.startDepth + frac * (seg.endDepth - seg.startDepth);
+        state = updateCompartments(state, depthToPressure(d), seg.gas, stepTime);
+      }
+    } else {
+      state = updateCompartments(state, pAbs, seg.gas, seg.time);
+    }
+
     cns     += tox.cns;
     otu     += tox.otu;
     runTime += seg.time;
@@ -202,16 +215,38 @@ export function planDeco(input: DecoInput): DecoResult {
     };
   }
 
-  // ── 3. 바닥 → 첫 감압 정지 수심으로 상승 ──
-  const ascToFirst = simulateAscent(state, currentDepth, deepestStopDepth, ascentRate, bottomGas, cns, otu);
-  state       = ascToFirst.state;
-  cns         = ascToFirst.cns;
-  otu         = ascToFirst.otu;
-  runTime    += ascToFirst.minutes;
-  currentDepth = deepestStopDepth;
-  if (trackGas && rmvBottom) {
-    const avgD = (currentDepth + deepestStopDepth) / 2;
-    addConsumption(bottomGas, gasUsed(rmvBottom, avgD, ascToFirst.minutes));
+  // ── 3. 바닥 → 첫 감압 정지 수심으로 상승 (전환 수심 경유) ──
+  // decoGases는 switchDepth 내림차순 정렬 → 상승 중 만나는 순서대로 처리
+  {
+    let fromD = currentDepth;
+    let gas   = bottomGas;
+
+    for (const dg of decoGases) {
+      if (dg.switchDepth < fromD && dg.switchDepth >= deepestStopDepth) {
+        const asc = simulateAscent(state, fromD, dg.switchDepth, ascentRate, gas, cns, otu);
+        state   = asc.state;
+        cns     = asc.cns;
+        otu     = asc.otu;
+        runTime += asc.minutes;
+        if (trackGas && rmvBottom) {
+          addConsumption(gas, gasUsed(rmvBottom, (fromD + dg.switchDepth) / 2, asc.minutes));
+        }
+        fromD = dg.switchDepth;
+        gas   = dg.mix;
+        recordGasSwitch(gas, fromD);
+      }
+    }
+
+    const asc = simulateAscent(state, fromD, deepestStopDepth, ascentRate, gas, cns, otu);
+    state       = asc.state;
+    cns         = asc.cns;
+    otu         = asc.otu;
+    runTime    += asc.minutes;
+    currentDepth = deepestStopDepth;
+    if (trackGas) {
+      const rmv = sameGas(gas, bottomGas) ? rmvBottom : rmvDecoEff;
+      if (rmv) addConsumption(gas, gasUsed(rmv, (fromD + deepestStopDepth) / 2, asc.minutes));
+    }
   }
 
   // ── 4. 감압 정지 처리 ──

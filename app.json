@@ -31,11 +31,15 @@
       "jsEngine": "jsc"
     },
     "scheme": "gas-blender",
-    "plugins": ["expo-router"],
+    "plugins": [
+      "expo-router"
+    ],
     "extra": {
       "eas": {
-        "projectId": ""
-      }
-    }
+        "projectId": "9039419d-0d06-4ec1-8bf3-fcb2d1942c8d"
+      },
+      "router": {}
+    },
+    "owner": "lky0113"
   }
 }
