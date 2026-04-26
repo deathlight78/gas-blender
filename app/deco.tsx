@@ -44,8 +44,8 @@ export default function DecoScreen() {
     });
   }, [navigation, theme]);
 
-  const [targetDepth, setTargetDepth] = useState(40);
-  const [bottomTime, setBottomTime]   = useState(30);
+  const [targetDepth, setTargetDepth] = useState(45);
+  const [bottomTime, setBottomTime]   = useState(25);
   const [bottomFO2, setBottomFO2]     = useState(0.21);
   const [bottomFHe, setBottomFHe]     = useState(0.35);
   const [gfLo, setGfLo] = useState(Math.round(gfLow  * 100));

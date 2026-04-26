@@ -205,9 +205,26 @@ export function planDeco(input: DecoInput): DecoResult {
     }
   }
 
-  // ── 2. GF_lo ceiling → 첫 감압 정지 수심 ──
-  const gfLoCeiling      = pressureToDepth(ceiling(state, gfLow));
-  const deepestStopDepth = roundUpToStop(gfLoCeiling, STOP_INCREMENT);
+  // ── 2. 첫 감압 정지 수심 동적 탐색 ──
+  // 바닥에서의 정적 ceiling 대신, 실제 상승 시 off-gassing을 반영해
+  // ceiling ≥ 현재 수심이 처음 발생하는 수심을 탐색 (MultiDeco 방식).
+  // 예) ceiling@21m=19m(<21m) → 정지 불필요, ceiling@18m=18.5m(≥18m) → 첫 정지=18m
+  const effectiveLastStopEarly = Math.max(STOP_INCREMENT, lastStopDepth);
+  const deepestStopDepth = (() => {
+    const gfLoCeiling  = pressureToDepth(ceiling(state, gfLow));
+    const candidateTop = roundUpToStop(gfLoCeiling, STOP_INCREMENT);
+    if (candidateTop <= 0) return 0;
+
+    let s = state;
+    let d = currentDepth;
+    for (let target = candidateTop; target >= effectiveLastStopEarly; target -= STOP_INCREMENT) {
+      const asc = simulateAscent(s, d, target, ascentRate, bottomGas, 0, 0);
+      s = asc.state;
+      d = target;
+      if (pressureToDepth(ceiling(s, gfLow)) >= target) return target;
+    }
+    return 0; // 모든 정지 수심에서 천장 < 현재 수심 → 감압 불필요
+  })();
 
   const stops: DecoStop[] = [];
 
@@ -259,7 +276,7 @@ export function planDeco(input: DecoInput): DecoResult {
   }
 
   // ── 4. 감압 정지 처리 ──
-  const effectiveLastStop = Math.max(STOP_INCREMENT, lastStopDepth);
+  const effectiveLastStop = effectiveLastStopEarly;
   let stopDepth = deepestStopDepth;
 
   while (stopDepth >= effectiveLastStop) {
