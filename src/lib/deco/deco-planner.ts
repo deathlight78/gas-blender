@@ -22,15 +22,21 @@ function depthToPressure(depthM: number): number {
   return SURFACE_PRESSURE + depthM / 10;
 }
 
-/** 수심에서 사용할 deco gas 선택 (전환 수심 이하 최선 기체) */
-function selectGas(
-  decoGases: Array<{ switchDepth: number; mix: GasMix }>,
+/** 수심에서 ppO₂ 한계 이내 최대 O₂ 기체 자동 선택 */
+function selectBestGas(
+  decoGases: Array<{ mix: GasMix }>,
   bottomMix: GasMix,
-  depthM: number
+  depthM: number,
+  ppO2Max: number
 ): GasMix {
-  let best = bottomMix;
+  let best    = bottomMix;
+  let bestFO2 = bottomMix.fO2;
   for (const dg of decoGases) {
-    if (depthM <= dg.switchDepth) best = dg.mix;
+    const ppO2AtDepth = dg.mix.fO2 * depthToPressure(depthM);
+    if (ppO2AtDepth <= ppO2Max && dg.mix.fO2 > bestFO2) {
+      best    = dg.mix;
+      bestFO2 = dg.mix.fO2;
+    }
   }
   return best;
 }
@@ -103,6 +109,7 @@ export function planDeco(input: DecoInput): DecoResult {
     airO2 = 0.209, airN2 = 0.79,
     lastStopDepth = DEFAULT_LAST_STOP,
     rmvBottom, rmvDeco,
+    ppO2DecoCeiling = 1.6,
   } = input;
 
   const rmvDecoEff = rmvDeco ?? rmvBottom; // deco RMV 미입력 시 bottom RMV 사용
@@ -124,12 +131,12 @@ export function planDeco(input: DecoInput): DecoResult {
     });
   }
   for (const dg of decoGases) {
-    const ppO2 = dg.mix.fO2 * depthToPressure(dg.switchDepth);
-    if (ppO2 < MIN_PPO2) {
+    // 감압 기체는 수면(0m)에서 ppO₂ = fO₂ 가 최솟값 → 저산소 여부만 체크
+    if (dg.mix.fO2 < MIN_PPO2) {
       hypoxicWarnings.push({
         gasLabel: gasLabel(dg.mix),
-        depth:    dg.switchDepth,
-        ppO2:     Math.round(ppO2 * 1000) / 1000,
+        depth:    0,
+        ppO2:     Math.round(dg.mix.fO2 * 1000) / 1000,
       });
     }
   }
@@ -215,33 +222,35 @@ export function planDeco(input: DecoInput): DecoResult {
     };
   }
 
-  // ── 3. 바닥 → 첫 감압 정지 수심으로 상승 (전환 수심 경유) ──
-  // decoGases는 switchDepth 내림차순 정렬 → 상승 중 만나는 순서대로 처리
+  // ── 3. 바닥 → 첫 감압 정지 수심으로 상승 (ppO₂ 기반 자동 기체 전환) ──
+  // 각 감압 기체의 MOD(ppO₂ 한계 기준)를 3m 단위로 내림 → 깊은 것부터 순서대로 전환
   {
     let fromD = currentDepth;
     let gas   = bottomGas;
 
-    for (const dg of decoGases) {
-      if (dg.switchDepth < fromD && dg.switchDepth >= deepestStopDepth) {
-        const asc = simulateAscent(state, fromD, dg.switchDepth, ascentRate, gas, cns, otu);
-        state   = asc.state;
-        cns     = asc.cns;
-        otu     = asc.otu;
-        runTime += asc.minutes;
-        if (trackGas && rmvBottom) {
-          addConsumption(gas, gasUsed(rmvBottom, (fromD + dg.switchDepth) / 2, asc.minutes));
-        }
-        fromD = dg.switchDepth;
-        gas   = dg.mix;
-        recordGasSwitch(gas, fromD);
+    const switchPoints = decoGases
+      .map(dg => ({
+        mix:     dg.mix,
+        switchD: Math.floor((ppO2DecoCeiling / dg.mix.fO2 - 1) * 10 / STOP_INCREMENT) * STOP_INCREMENT,
+      }))
+      .filter(sp => sp.switchD >= deepestStopDepth && sp.switchD < fromD)
+      .sort((a, b) => b.switchD - a.switchD);
+
+    for (const sp of switchPoints) {
+      if (sp.mix.fO2 <= gas.fO2) continue; // 현재 기체보다 O₂ 낮으면 스킵
+      const asc = simulateAscent(state, fromD, sp.switchD, ascentRate, gas, cns, otu);
+      state   = asc.state; cns = asc.cns; otu = asc.otu; runTime += asc.minutes;
+      if (trackGas) {
+        const rmv = sameGas(gas, bottomGas) ? rmvBottom : rmvDecoEff;
+        if (rmv) addConsumption(gas, gasUsed(rmv, (fromD + sp.switchD) / 2, asc.minutes));
       }
+      fromD = sp.switchD;
+      gas   = sp.mix;
+      recordGasSwitch(gas, fromD);
     }
 
     const asc = simulateAscent(state, fromD, deepestStopDepth, ascentRate, gas, cns, otu);
-    state       = asc.state;
-    cns         = asc.cns;
-    otu         = asc.otu;
-    runTime    += asc.minutes;
+    state       = asc.state; cns = asc.cns; otu = asc.otu; runTime += asc.minutes;
     currentDepth = deepestStopDepth;
     if (trackGas) {
       const rmv = sameGas(gas, bottomGas) ? rmvBottom : rmvDecoEff;
@@ -255,7 +264,7 @@ export function planDeco(input: DecoInput): DecoResult {
 
   while (stopDepth >= effectiveLastStop) {
     const nextStopDepth = stopDepth - STOP_INCREMENT;
-    const gas = selectGas(decoGases, bottomGas, stopDepth);
+    const gas = selectBestGas(decoGases, bottomGas, stopDepth, ppO2DecoCeiling);
     recordGasSwitch(gas, stopDepth);
 
     let stopMinutes = 0;
@@ -289,7 +298,7 @@ export function planDeco(input: DecoInput): DecoResult {
     // 다음 정지 수심으로 상승
     const ascResult = simulateAscent(
       state, stopDepth, nextStopDepth, ascentRate,
-      selectGas(decoGases, bottomGas, stopDepth), cns, otu
+      selectBestGas(decoGases, bottomGas, stopDepth, ppO2DecoCeiling), cns, otu
     );
     if (trackGas && rmvDecoEff) {
       addConsumption(gas, gasUsed(rmvDecoEff, (stopDepth + nextStopDepth) / 2, ascResult.minutes));

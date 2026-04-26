@@ -13,8 +13,10 @@ export interface DiveSegment {
 export interface DecoInput {
   /** 다이빙 프로파일 세그먼트 목록 */
   segments: DiveSegment[];
-  /** 사용 가능한 감압 기체 목록 (수심 얕은 순) */
-  decoGases: Array<{ switchDepth: number; mix: GasMix }>;
+  /** 사용 가능한 감압 기체 목록 */
+  decoGases: Array<{ mix: GasMix }>;
+  /** 감압 기체 선택 ppO₂ 한계 (bar, 기본 1.6) */
+  ppO2DecoCeiling: number;
   /** Gradient Factor */
   gfLow: number;   // 0~1 (예: 0.3)
   gfHigh: number;  // 0~1 (예: 0.8)

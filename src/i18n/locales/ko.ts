@@ -132,7 +132,7 @@ export const ko = {
   deco_bottom_time: '바닥 시간 (런타임)',
   deco_bottom_mix: '바닥 기체 (Bottom Mix)',
   deco_deco_gases: '감압 기체 (Deco Gases)',
-  deco_deco_gases_subtitle: '전환 수심 이하에서 사용할 기체를 추가하세요',
+  deco_deco_gases_subtitle: '설정의 ppO₂ {limit} bar 기준으로 MOD 자동 계산',
   deco_cylinder: '실린더',
   deco_switch_depth: '전환 수심',
   deco_remove_gas: '삭제',

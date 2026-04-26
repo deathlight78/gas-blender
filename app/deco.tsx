@@ -18,12 +18,12 @@ import SessionPanel from '../src/components/deco/SessionPanel';
 import { useAppTheme } from '../src/context/ThemeContext';
 import { useTranslation } from '../src/i18n';
 
-interface DecoGasRow { id: number; switchDepth: number; fO2: number; fHe: number }
+interface DecoGasRow { id: number; fO2: number; fHe: number }
 let nextId = 1;
 
 export default function DecoScreen() {
   const scrollRef = useRef<ScrollView>(null);
-  const { gfLow, gfHigh, gfBailoutLow, gfBailoutHigh, ascentRate, descentRate, depthUnit, airO2, airN2 } = useSettingsStore();
+  const { gfLow, gfHigh, gfBailoutLow, gfBailoutHigh, ascentRate, descentRate, depthUnit, airO2, airN2, ppO2Deco } = useSettingsStore();
   const theme = useAppTheme();
   const navigation = useNavigation();
 
@@ -53,8 +53,8 @@ export default function DecoScreen() {
   const [bailoutMode, setBailoutMode] = useState(false);
   const [lastStop, setLastStop] = useState(6);   // m — GUE 기본값
   const [decoGases, setDecoGases] = useState<DecoGasRow[]>([
-    { id: nextId++, switchDepth: 21, fO2: 0.5, fHe: 0 },
-    { id: nextId++, switchDepth: 6,  fO2: 1.0, fHe: 0 },
+    { id: nextId++, fO2: 0.5, fHe: 0 },
+    { id: nextId++, fO2: 1.0, fHe: 0 },
   ]);
 
   // RMV 상태 (0 = 미입력 → 소비량 계산 안 함)
@@ -74,8 +74,6 @@ export default function DecoScreen() {
   const depthMax        = depthUnit === 'ft' ? 330 : 100;
   const depthStep       = depthUnit === 'ft' ? 3   : 1;
   const depthUnit_label = depthUnit === 'ft' ? 'ft' : 'm';
-  const switchMax       = depthUnit === 'ft' ? 300 : 90;
-  const switchStep      = depthUnit === 'ft' ? 10  : 3;
 
   function calculate() {
     const depthM  = toM(targetDepth);
@@ -102,12 +100,10 @@ export default function DecoScreen() {
         { type: 'descent', startDepth: 0,     endDepth: depthM, time: descMin,      gas: bottomMix },
         { type: 'bottom',  startDepth: depthM, endDepth: depthM, time: atDepthTime,  gas: bottomMix },
       ],
-      decoGases: decoGases
-        .map(dg => ({
-          switchDepth: toM(dg.switchDepth),
-          mix: { fO2: dg.fO2, fHe: dg.fHe, fN2: Math.max(0, 1 - dg.fO2 - dg.fHe) },
-        }))
-        .sort((a, b) => b.switchDepth - a.switchDepth),
+      decoGases: decoGases.map(dg => ({
+        mix: { fO2: dg.fO2, fHe: dg.fHe, fN2: Math.max(0, 1 - dg.fO2 - dg.fHe) },
+      })),
+      ppO2DecoCeiling: ppO2Deco,
       gfLow: gfLoVal, gfHigh: gfHiVal,
       ascentRate, descentRate, airO2, airN2,
       lastStopDepth: lastStop,
@@ -170,7 +166,7 @@ export default function DecoScreen() {
       </View>
 
       {/* ── 감압 기체 ── */}
-      <SectionHeader title={t('deco_deco_gases')} subtitle={t('deco_deco_gases_subtitle')} />
+      <SectionHeader title={t('deco_deco_gases')} subtitle={t('deco_deco_gases_subtitle', { limit: ppO2Deco.toFixed(1) })} />
       {decoGases.length === 0 && (
         <View style={[styles.emptyGasBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
           <Text style={[styles.emptyGasText, { color: theme.textMuted }]}>{t('deco_add_gas')}</Text>
@@ -180,9 +176,10 @@ export default function DecoScreen() {
         const gasLabel = dg.fHe > 0
           ? `Trimix ${(dg.fO2 * 100).toFixed(0)}/${(dg.fHe * 100).toFixed(0)}`
           : `EAN ${(dg.fO2 * 100).toFixed(0)}`;
-        const fN2 = Math.max(0, 1 - dg.fO2 - dg.fHe);
-        const ata = dg.switchDepth / 10 + 1;
-        const ppO2AtSwitch = (dg.fO2 * ata).toFixed(2);
+        const fN2    = Math.max(0, 1 - dg.fO2 - dg.fHe);
+        // ppO₂ 한계 기반 MOD 계산 (m)
+        const modM   = Math.floor((ppO2Deco / dg.fO2 - 1) * 10);
+        const modDisp = depthUnit === 'ft' ? Math.floor(modM / 0.3048) : modM;
         return (
           <View key={dg.id} style={[styles.decoGasCard, { backgroundColor: theme.surface }]}>
             {/* 카드 헤더 */}
@@ -195,7 +192,7 @@ export default function DecoScreen() {
                   {t('deco_cylinder')} {index + 1}
                 </Text>
                 <Text style={[styles.decoGasSubtitle, { color: theme.textMuted }]}>
-                  {gasLabel} · {dg.switchDepth}{depthUnit_label}
+                  {gasLabel} · MOD {modDisp}{depthUnit_label}
                 </Text>
               </View>
               <TouchableOpacity
@@ -210,30 +207,26 @@ export default function DecoScreen() {
 
             {/* 카드 바디 */}
             <View style={styles.decoGasBody}>
-              <StepInput label={t('deco_switch_depth')}
-                value={dg.switchDepth}
-                onChange={v => setDecoGases(p => p.map(g => g.id === dg.id ? { ...g, switchDepth: v } : g))}
-                min={depthUnit === 'ft' ? 10 : 3} max={switchMax} step={switchStep} unit={depthUnit_label} />
               <GasSlider label="O₂ %"
                 value={dg.fO2}
                 onChange={v => setDecoGases(p => p.map(g => g.id === dg.id ? { ...g, fO2: v } : g))}
                 min={0.04} max={1} step={0.01} />
             </View>
 
-            {/* 카드 푸터 — 가스 정보 */}
+            {/* 카드 푸터 — MOD 및 ppO₂ 정보 */}
             <View style={[styles.decoGasFooter, { borderTopColor: theme.surfaceAlt }]}>
               <Text style={[styles.decoGasInfo, { color: theme.textMuted }]}>
                 N₂ {(fN2 * 100).toFixed(0)}%
               </Text>
               <Text style={[styles.decoGasInfo, { color: theme.accent }]}>
-                ppO₂ {ppO2AtSwitch} bar @ {dg.switchDepth}{depthUnit_label}
+                MOD {modDisp}{depthUnit_label} · ppO₂ {ppO2Deco.toFixed(1)} bar
               </Text>
             </View>
           </View>
         );
       })}
       <TouchableOpacity style={[styles.addGasBtn, { borderColor: theme.accent }]}
-        onPress={() => setDecoGases(p => [...p, { id: nextId++, switchDepth: 9, fO2: 0.36, fHe: 0 }])}>
+        onPress={() => setDecoGases(p => [...p, { id: nextId++, fO2: 0.36, fHe: 0 }])}>
         <Text style={[styles.addGasBtnText, { color: theme.accent }]}>{t('deco_add_gas')}</Text>
       </TouchableOpacity>
 

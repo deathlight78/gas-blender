@@ -132,7 +132,7 @@ export const en = {
   deco_bottom_time: 'Bottom Time (Runtime)',
   deco_bottom_mix: 'Bottom Mix',
   deco_deco_gases: 'Deco Gases',
-  deco_deco_gases_subtitle: 'Add gases to use below each switch depth',
+  deco_deco_gases_subtitle: 'MOD auto-computed at ppO₂ ≤ {limit} bar (set in Settings)',
   deco_cylinder: 'Cylinder',
   deco_switch_depth: 'Switch Depth',
   deco_remove_gas: 'Remove',
