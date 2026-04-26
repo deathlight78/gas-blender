@@ -27,7 +27,7 @@
 - `deco/buhlmann.ts` — Schreiner 방정식, 조직 포화도 업데이트, GF ceiling
 - `deco/gradient-factor.ts` — GF 보간 + 3m 정지 올림
 - `deco/oxygen-toxicity.ts` — CNS%/OTU (NOAA 표 + Repex 공식)
-- `deco/deco-planner.ts` — 감압 오케스트레이터 (multi-gas, CNS/OTU 누적, lastStopDepth, ICD 경고, 저산소 경고, 기체별 소비량, 하강 1m 단계별 조직 적분, 상승 중 기체 전환 수심 경유)
+- `deco/deco-planner.ts` — 감압 오케스트레이터 (multi-gas, CNS/OTU 누적, lastStopDepth, ICD 경고, 저산소 경고, 기체별 소비량, 하강 1m 단계별 조직 적분, ppO₂ 한계 기반 자동 기체 선택)
 - `deco/cns-recovery.ts` — 수면 휴식 후 CNS% 지수 회복 계산 (반감기 90min), 세션 carry-over 집계
 - `utils/ranges.ts` — buildRange(min, max, step)
 
@@ -35,7 +35,7 @@
 - `index.tsx` — 홈 대시보드 (기능 카드, i18n)
 - `blending.tsx` — OC / CCR 블렌딩 (탭 전환, 헤더 ⓘ 인포 버튼, CCR-1~5 결과 카드)
 - `gas-plan.tsx` — SAC Rate · RMV · 가스 사용시간 · 실린더별 계획 (수심/SAC 개별 설정, 헤더 ⓘ 인포 버튼)
-- `deco.tsx` — 감압 계획 (StepInput + GasSlider, 마지막 정지 수심, RMV, ICD/저산소 경고, 기체별 소비량, Bailout 탭 UI, 감압 기체 번호 카드, 다이빙 세션 패널, 런타임 기반 바닥 시간 입력 + 수심 체류 힌트)
+- `deco.tsx` — 감압 계획 (StepInput + GasSlider, 마지막 정지 수심, RMV, ICD/저산소 경고, 기체별 소비량, Bailout 탭 UI, 감압 기체 번호 카드(MOD 표시), 다이빙 세션 패널, 런타임 기반 바닥 시간 입력 + 수심 체류 힌트)
 - `calculator.tsx` — MOD / Best Mix / EAD / END (헤더 ⓘ 인포 버튼)
 - `settings.tsx` — ppO₂ · 상승/하강 속도 · GF · GF Bailout · 단위 · 공기 조성 · 언어 · 테마 · 피드백 이메일
 
@@ -131,7 +131,7 @@ npm install <패키지> --legacy-peer-deps
 | ICD 경고 임계값 | fN₂ 차이 0.5% | 부동소수점 오차 방지, 실제 위험 기준 |
 | 헤더 ⓘ 버튼 주입 | `useNavigation + useLayoutEffect` | Expo Router tabs에서 화면별 headerRight 설정 표준 방식 |
 | Bailout GF UI | GF 섹션 내 탭(일반/Bailout) 전환 | 별도 토글 행보다 맥락 명확, 탭마다 현재 GF 수치 표시 |
-| 감압 기체 카드 | 번호 뱃지 + 헤더/바디/푸터 분리 | 어떤 실린더인지 즉시 구분, 전환 수심 ppO₂ 하단 표시 |
+| 감압 기체 카드 | 번호 뱃지 + 헤더/바디/푸터 분리 | 어떤 실린더인지 즉시 구분, MOD(ppO₂ 설정 기준) 하단 표시 |
 | 설정 탭 섹션 순서 | ppO₂ → 상승/하강 속도 → GF → GF Bailout → 단위 → 공기 조성 → 외관 | 감압 계획 흐름(독성 한계→속도→GF)과 일치 |
 | 세션 OTU carry-over | OTU 단순 누적, CNS%는 반감기 90min 지수 회복 | NOAA 기준 적용, 현실적 피로도 반영 |
 | 세션 조직 포화도 | 미구현 (Phase 2 범위 외) | 구현 복잡도 높음, 별도 Phase 3으로 분리 |
@@ -139,4 +139,5 @@ npm install <패키지> --legacy-peer-deps
 | 바닥 시간 입력 방식 | 런타임 입력 → 실제 체류 = 런타임 − 하강 시간 | GUE 플래너 기준, 하강 포함 런타임으로 직관적 계획 가능 |
 | 하강 구간 조직 적분 | 1m 간격 단계별 Schreiner 적분 | 평균 수심 단일 계산 대비 조직 포화도 정확도 향상 |
 | 감압 테이블 레이아웃 | 6컬럼(수심/정지/런타임/믹스/ppO₂/EAD) + 페이즈 아이콘 행 | 하강·바텀·상승·정지를 한 테이블에서 프로파일 전체 파악 |
-| 상승 중 기체 전환 | 바닥→첫 정지 상승 구간에서 전환 수심 경유 처리 | 기체 전환 시 ICD/독성 계산·소비량 정확도 보장 |
+| 감압 기체 전환 방식 | ppO₂ 한계 기반 자동 선택 (수동 전환 수심 없음) — MOD = `(ppO₂_limit / fO₂ − 1) × 10`, 3m 단위 내림 | 멀티데코·GUE 방식 일치, 수동 입력 오류 제거 |
+| 상승 중 기체 전환 | ppO₂ 한계 기반 MOD 도달 시 자동 전환 (바닥→첫 정지 구간 포함) | 기체 전환 시 ICD/독성 계산·소비량 정확도 보장 |
