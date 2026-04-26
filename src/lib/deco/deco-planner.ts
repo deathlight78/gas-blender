@@ -289,8 +289,9 @@ export function planDeco(input: DecoInput): DecoResult {
     for (let i = 0; i < MAX_STOP_MINUTES; i++) {
       const gf           = interpolateGF(stopDepth, deepestStopDepth, gfLow, gfHigh);
       const ceilingDepth = pressureToDepth(ceiling(state, gf));
-      // 마지막 정지는 surface(0m)까지 클리어되어야 함, 그 외는 다음 정지 이하
-      const clearTarget  = stopDepth <= effectiveLastStop ? 0 : Math.max(0, nextStopDepth);
+      // 마지막 정지는 수면(0m)까지 클리어, 그 외는 현재 수심 이하가 되면 출발 가능
+      // (MultiDeco / Shearwater 방식: ceiling ≤ currentDepth → proceed)
+      const clearTarget  = stopDepth <= effectiveLastStop ? 0 : stopDepth;
       if (ceilingDepth <= clearTarget) break;
 
       const pAbs = depthToPressure(stopDepth);
