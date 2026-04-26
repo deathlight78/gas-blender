@@ -339,14 +339,17 @@ export const en = {
     '──────────────────────\n\n' +
     '◆ Gradient Factor (GF)\n\n' +
     'Two numbers that control how conservative the decompression model is. Lower = more conservative (longer stops), higher = more aggressive (shorter stops).\n' +
-    '• GF Low: Sets the depth of the first deco stop. Lower values start stops deeper.\n' +
+    '• GF Low: Sets the first deco stop criterion. The actual stop depth is found dynamically by simulating the ascent with off-gassing credit — the shallowest depth where the ceiling first meets or exceeds current depth. Lower values start stops deeper.\n' +
     '• GF High: Sets the ceiling limit at the last stop before surfacing.\n' +
     '• Reference: GUE default 30/85 · Conservative 20/70 · Aggressive 80/100\n\n' +
     'Use the [Normal Plan] / [⚠ Bailout] tabs at the top of the GF section to switch modes. Bailout mode applies the Bailout GF from Settings — intended for CCR emergency OC switch scenarios.\n\n' +
     '──────────────────────\n\n' +
     '◆ Deco Gases (Numbered Cylinders)\n\n' +
     'Added gases are numbered Cylinder 1, 2, 3... Each card shows the ppO₂ and N₂% at the switch depth so you can verify safety at a glance.\n\n' +
-    'Higher-O₂ gases at shallow stops accelerate off-gassing and shorten deco. Set the switch depth to the deepest point where ppO₂ stays below the deco limit (default 1.6 bar).\n\n' +
+    'Switch depths are calculated automatically from the deco ppO₂ limit in Settings:\n' +
+    'MOD = (ppO₂ limit ÷ fO₂ − 1) × 10, rounded down to 3 m steps\n' +
+    'Example: EAN50, limit 1.4 bar → MOD = (1.4 ÷ 0.5 − 1) × 10 = 18 m\n\n' +
+    'Higher-O₂ gases accelerate nitrogen off-gassing and shorten total deco time.\n\n' +
     '──────────────────────\n\n' +
     '◆ ICD (Isobaric Counter-Diffusion) Warning\n\n' +
     'When switching from a helium-rich gas to a high-O₂ deco gas, the N₂ partial pressure can suddenly rise — potentially causing bubbles even without ascending. Flagged when ΔfN₂ exceeds 0.5%.\n\n' +
